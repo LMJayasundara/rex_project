@@ -1,0 +1,2 @@
+npm run package
+nased on electron-flask-master github project

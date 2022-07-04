@@ -1,0 +1,33 @@
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+  
+table thead tr th {
+    background-color: red;
+    position: sticky;
+    z-index: 0;
+    top: 0;
+}
+
+.td {
+    padding: 1em;
+}
+
+.row > div {border:10px solid white}
+.B {background:blue; height:200px}
+.G {background:green; height:100px}
+.O {background:orange; height:100px}
+
+table tr:not(:first-child){
+    cursor: pointer;transition: all .25s ease-in-out;
+}
+table tr:not(:first-child):hover{background-color: #ddd;}
+
+.alert.success {
+    background-color: green;
+}
+  
+.alert.error {
+    background-color: red;
+}

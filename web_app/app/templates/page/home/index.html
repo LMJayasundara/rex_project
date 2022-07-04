@@ -1,0 +1,1581 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block body %}
+
+<link href="{{ url_for('static', filename='css/index.css') }}" rel="stylesheet" />
+
+<!-- Create a New File -->
+<section class="container-fluid" style="display: none;" id="file-container">
+  <nav class="navbar navbar-expand-sm bg-dark justify-content-center" style="margin-left: -15px; margin-right: -15px;">
+    <h6 style="color: white"> Create a New File </h6>
+  </nav>
+  
+  <div class="row" style="margin-top: 5%;">
+    <div class="col-md-4" style="background-color: #F5F7FA;">
+      <!-- <input type="submit" name='btn' class="btn btn-primary col-md-2" value="Clear" onclick="showModal();" style="margin-top: 10vh;"> -->
+      <form action="/fileSave" method="post">
+        <div class="form-group" style="margin-top: 3em;">
+          <input type="text" id="domTextElement" value="{{ win }}" style="display: none;">
+          <label>File No:</label>
+          <input type="text" class="form-control col-md-8" name="FileNo" id="FileNo11" value="" style="margin-left: 5vw;" required>
+          <label>Item Descripition:</label>
+          <input type="text" class="form-control col-md-8" name="ItemDescripition" id="ItemDescripition11" value="" style="margin-left: 5vw;" required>
+          <label>Drawing No:</label>
+          <input type="text" class="form-control col-md-8" name="DrawingNo" id="DrawingNo11" value="" style="margin-left: 5vw;" required>
+          <label>Drawing Issue:</label>
+          <input type="text" class="form-control col-md-8" name="DrawingIssue" id="DrawingIssue11" value="" style="margin-left: 5vw;" required>
+        </div>
+
+        <input type="submit" name='btn' class="btn btn-primary col-md-3" value="Save" style="margin-top: 10vh;">
+        <input type="submit" name='btn' class="btn btn-warning col-md-3" value="Update" style="margin-top: 10vh;">
+        <input type="submit" name='btn' class="btn btn-danger col-md-3" value="Delete" style="margin-top: 10vh;"> 
+        <!-- <input type="submit" name='btn' class="btn btn-primary col-md-2" value="Clear" onclick="clearRow();" style="margin-top: 10vh;"> -->
+      </form>
+
+    </div>
+    <div class="col-md-8 justify-content-center">
+      <div style="height: 80vh; overflow: scroll; overflow-x: hidden;">
+        <table id="fetch" class="table" style="text-align: center;">
+          <thead class="thead-dark">
+            <tr>
+              <th>File No</th>
+              <th>Item Descripition</th>
+              <th>Drawing No</th>
+              <th>Drawing Issue</th>
+              <th>Jig Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sub11 in sub11 %}
+              {% if sub11[4] == "Work" %}
+                <tr>
+                  <tr>
+                    <td>{{ sub11[0] }}</td>
+                    <td>{{ sub11[1] }}</td>
+                    <td>{{ sub11[2] }}</td>
+                    <td>{{ sub11[3] }}</td>
+                    <td>{{ sub11[4] }}</td>
+                  </tr>
+                </tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  var table = document.getElementById("fetch"),rIndex;
+            
+  for(var i = 1; i < table.rows.length; i++)
+  {
+      table.rows[i].onclick = function()
+      {
+        rIndex = this.rowIndex;
+        console.log(rIndex);
+        
+        document.getElementById("FileNo11").value = this.cells[0].innerHTML;
+        document.getElementById("ItemDescripition11").value = this.cells[1].innerHTML;
+        document.getElementById("DrawingNo11").value = this.cells[2].innerHTML;
+        document.getElementById("DrawingIssue11").value = this.cells[3].innerHTML;
+      };
+  }
+
+  // function editRow()
+  // {
+  //   table.rows[rIndex].cells[0].innerHTML = document.getElementById("FileNo11").value;
+  //   table.rows[rIndex].cells[1].innerHTML = document.getElementById("ItemDescripition11").value;
+  //   table.rows[rIndex].cells[2].innerHTML = document.getElementById("DrawingNo11").value;
+  //   table.rows[rIndex].cells[3].innerHTML = document.getElementById("DrawingIssue11").value;
+  // }
+
+  // function clearRow(){
+  //   document.getElementById("FileNo11").value = null;
+  //   document.getElementById("ItemDescripition11").value = null;
+  //   document.getElementById("DrawingNo11").value = null;
+  //   document.getElementById("DrawingIssue11").value = null;
+  // }
+</script>
+
+<!-- Select Item Description -->
+<section class="container-fluid" style="display: none;" id="jigs-container">
+  <nav class="navbar navbar-expand-sm bg-dark justify-content-center" style="margin-left: -15px; margin-right: -15px;">
+    <h6 style="color: white"> Create Jigs </h6>
+  </nav>
+
+  <form action="/process" method="post">
+  <div class="row">
+    <div class="col-sm-4 mb-0" style="height: 33vh; background-color: #F5F7FA;">
+        <div class="row mb-4" style="margin-top: 5%;">
+          <label for="descriptionLabel" class="col-sm-4 col-form-label">Item Desc:</label>
+              <select class="custom-select col-sm-6" id="decpost" name="decpost" onchange="test()">
+                <option selected>Choose...</option>
+                {% for sub11 in sub11 %}
+                  {% if sub11[4] == "Work" %}
+                    <option value='{{ sub11 }}'>{{ sub11[1] }}</option>
+                  {% endif %}
+                {% endfor %}
+              </select>
+        </div>
+
+        <div class="row mb-4">
+          <label for="lengthLabel1" class="col-sm-4 col-form-label">Cord Length:</label>
+          <input type="text" class="form-control col-sm-6" id="lengthLabel1" name="lengthLabel1" placeholder="Enter Cord Length" onkeyup="document.getElementById('middleLabel').value=(this.value/2)" value="{{ L }}" required>
+        </div>
+        <div class="row mb-4">
+          <label for="middleLabel" class="col-sm-4 col-form-label">Middle Point:</label>
+          <input type="text" class="form-control col-sm-6" id="middleLabel" name="middleLabel" placeholder="Enter Middle Point" value="{{ M }}" required readonly>
+        </div>
+    </div>
+
+    <div class="col-sm-4 mb-0" style="height: 33vh; background-color: #F5F7FA;">
+      <div class="row mb-4" style="margin-top: 5%;">
+        <label for="fileLabel1" class="col-sm-4 col-form-label">File No:</label>
+        <input type="text" class="form-control col-sm-6" id="fileLabel1" name="fileLabel1" placeholder="File No" value="{{ F }}" onkeypress="return false;" style="caret-color: transparent !important; background-color: rgba(226, 226, 226, 0.8);" required>
+      </div>
+      <div class="row mb-4">
+        <label for="drawingLabel" class="col-sm-4 col-form-label">Drawing No:</label>
+        <input type="text" class="form-control col-sm-6" id="drawingLabel1" name="drawingLabel1" placeholder="Drawing No" value="{{ D }}" onkeypress="return false;" style="caret-color: transparent !important; background-color: rgba(226, 226, 226, 0.8);" required>
+      </div>
+      <div class="row mb-4">
+        <label for="issueLabel" class="col-sm-4 col-form-label">Issue:</label>
+        <input type="text" class="form-control col-sm-6" id="issueLabel1" name="issueLabel1" placeholder="Issue" value="{{ I }}" onkeypress="return false;" style="caret-color: transparent !important; background-color: rgba(226, 226, 226, 0.8);" required>
+      </div>
+    </div>
+
+    <div class="col-sm-4 mb-0" style="height: 33vh; background-color: #F5F7FA;">
+        <div class="row mb-6" style="margin-top: 5%;">
+          <label for="marksLabel" class="col-sm-8 col-form-label">Total Marks:</label>
+          <input type="text" class="form-control col-sm-3" id="marksLabel" name="marksLabel" placeholder="Value" value="{{ N }}" required>
+        </div>
+        <div class="row mb-6" style="margin-top: 6%;">
+          <label for="turnLabel" class="col-sm-8 col-form-label">No of Nets per Turn:</label>
+          <input type="text" class="form-control col-sm-3" id="turnLabel" name="turnLabel" placeholder="Value" value="{{ C }}" required>
+        </div>
+        <div class="row mb-6" style="margin-top: 7%;">
+          <label for="adjustemtLabel" class="col-sm-8 col-form-label">Cut & Mark Adjustemt Value:</label>
+          <input type="text" class="form-control col-sm-3" id="adjustemtLabel" name="adjustemtLabel" placeholder="Value" value="{{ A }}" required>
+        </div>
+    </div>
+  </div>
+
+    <div class="row justify-content-center">
+      <!-- <label for="kkLabel" class="col-md-1 col-form-label">K-K Distance:</label> -->
+      <input type="text" class="form-control col-md-2" id="kkLabel" name="kkLabel" style="margin-right: 1em;" placeholder="K-K Distance" value="{{ KK }}"  required>
+      <input type="submit" name='btn' class="btn btn-primary col-md-1" value="Done" style="margin-right: 1em;">
+      <!-- <input type="submit" name='btn' class="btn btn-warning col-md-1" value="Clear"> -->
+    </div>
+  <!-- </form> -->
+
+  <div class="row col-sm mb-0" style="height: 45vh;">
+      <div class="col-sm-6 mb-0" style="height: 45vh; background-color: #F5F7FA; margin-left: -0.55em; margin-top: 0.5em;">
+
+        <div class="row mb-12" style="margin-top: 2%; margin-left: 1%;">
+            <h6>Colors:</h6>
+            <div class="col-2 p-1 mb-1 bg-dark text-white" style="border: 0ch; margin-top: 6%;  margin-left: -3.3em; text-align: center; border-radius: 25px;">Default</div>
+            <div class="col-2 p-1 mb-1 bg-success text-white" style="border: 0ch; margin-top: 6%;  margin-left: 1.55em; text-align: center; border-radius: 25px;">Starting</div>
+            <div class="col-2 p-1 mb-1 bg-primary text-white" style="border: 0ch; margin-top: 6%;  margin-left: 1.55em; text-align: center; border-radius: 25px;">Center</div>
+            <div class="col-2 p-1 mb-1 bg-success text-white" style="border: 0ch; margin-top: 6%;  margin-left: 1.55em; text-align: center; border-radius: 25px;">End</div>
+        </div>
+
+        <div class="row mb-4" style="margin-top: 4%;">
+          <label for="placeLabel" class="col-sm-4 col-form-label">Select Place:</label>
+          <select class="custom-select col-sm-5" id="placeLabel" name="placeLabel" onchange="fillgap()" required>
+            <option selected>Choose...</option>
+            {% for jig in jig %}
+                <option value="{{ jig }}">{{ jig[0] }}</option>
+            {% endfor %}
+          </select>
+          <input type="text" name="placeLabelx" id="placeLabelx" class="col-sm-5"  style="display: none;">
+        </div>
+
+        <div class="row mb-4" style="margin-top: 4%;">
+          <label for="colorLabel" class="col-sm-4 col-form-label">Select Color:</label>
+          <select class="custom-select col-sm-5" id="colorLabel" name="colorLabel" required>
+            <option selected>Choose...</option>
+              <option value="green">green</option>
+              <option value="blue">blue</option>
+              <option value="black">black</option>
+          </select>
+        </div>
+
+        <div class="row mb-4" style="margin-top: 4%;">
+          <label class="col-sm-4 col-form-label">Select Gap:</label>
+          <input type="text" name="gapLabel" id="gapLabel" class="col-sm-5" placeholder="Enter Gap">
+        </div>
+
+        <!-- <button type="button" class="btn btn-info" style="position: absolute; margin-top: -23%; margin-left: 85%;">Add</button> -->
+        <input type="submit" name='btn' class="btn btn-info col-md-2" style="position: absolute; margin-top: -23%; margin-left: 75%;" value="Add">
+
+        <!-- <div class="row mb-4 justify-content-center" style="margin-top: -0.5em;">
+          <button type="button" class="btn btn-secondary" style="margin-right: 3%;">Preview</button>
+        </div> -->
+      </div>
+    
+      <div class="col-sm-6 mb-0" style="height: 45vh; margin-top: 0.5em; display: none;" id="defgraph">
+        <div style="height: 40vh; overflow: scroll; overflow-x: hidden;">
+          <table class="table" style="text-align: center;">
+            <thead class="thead-dark">
+              <tr>
+                <th>Place No</th>
+                <th>Color</th>
+                <th>Gap</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="col-sm-6 mb-0" style="height: 45vh; margin-top: 0.5em; display: block;" id="datagraph">
+        <div style="height: 40vh; overflow: scroll; overflow-x: hidden;">
+          <table class="table" style="text-align: center;">
+            <thead class="thead-dark">
+              <tr>
+                <th>Place No</th>
+                <th>Color</th>
+                <th>Gap</th>
+              </tr>
+            </thead>
+            <tbody> <!--id="graphbody" style="display: block;"-->
+              {% for jig in jig %}
+                  <tr>
+                    <tr>
+                      {% if jig[1] == "green" %}
+                        <td style="color: green;">{{ jig[0] }}</td>
+                        <td style="color: green;">{{ jig[1] }}</td>
+                        <td style="color: green;">{{ jig[2] }}</td>
+                      {% elif jig[1] == "blue" %}
+                        <td style="color: blue;">{{ jig[0] }}</td>
+                        <td style="color: blue;">{{ jig[1] }}</td>
+                        <td style="color: blue;">{{ jig[2] }}</td>
+                      {% else %}
+                        <td style="color: black;">{{ jig[0] }}</td>
+                        <td style="color: black;">{{ jig[1] }}</td>
+                        <td style="color: black;">{{ jig[2] }}</td>
+                      {% endif %}
+                    </tr>
+                  </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+  </div>
+<!-- </form> -->
+
+<!-- <form action="/status" method="post"> -->
+  <div class="row mb-12 justify-content-center" style="margin-top: 1em;">
+    <input type="text" id="prvtbldata" value="{{ jig }}" style="display: none;">
+    <!-- <label for="kkLabel" class="col-sm-2 col-form-label">K-K Distance:</label>
+    <input type="text" class="form-control col-sm-1" id="kkLabel" style="margin-right: 1em;" placeholder="Value" required> -->
+    <!-- <button type="button" class="btn btn-primary col-sm-1" style="margin-right: 1em;">Run</button> -->
+    <input type="submit" name="btn" class="btn btn-secondary col-sm-1" style="margin-right: 1em;" onclick="showModal()" value="Preview">
+    <input type="submit" name="btn" class="btn btn-primary col-sm-1" style="margin-right: 1em;" value="Save">
+    <input type="submit" name="btn" class="btn btn-primary col-sm-2" style="margin-right: 1em;" value="Sumbmit to QA">
+    <input type="submit" name='btn' class="btn btn-warning col-md-1" value="Clear">
+  </div>
+</form>
+
+</section>
+
+<script>
+  function test() {
+    document.getElementById('defgraph').style.display = 'block';
+    document.getElementById('datagraph').style.display = 'none';
+    var val = (document.getElementById('decpost').value).replace(/[{('')}]/g, '').split(',');
+    console.log(val);
+    if(val[5] == 0){
+      // console.log("none");
+      // document.getElementById('graph1').style.display = 'block';
+      // document.getElementById('graph2').style.display = 'none';
+
+      document.getElementById('fileLabel1').value = val[0];
+      document.getElementById('drawingLabel1').value = val[2];
+      document.getElementById('issueLabel1').value = val[3];
+
+      document.getElementById('lengthLabel1').value = null;
+      document.getElementById('middleLabel').value = null;
+      document.getElementById('marksLabel').value = null;
+      document.getElementById('turnLabel').value = null;
+      document.getElementById('adjustemtLabel').value = null;
+      document.getElementById('kkLabel').value = null;
+
+      document.getElementById('lengthLabel1').readOnly = false;
+      // document.getElementById('middleLabel').readOnly = false;
+      document.getElementById('marksLabel').readOnly = false;
+      document.getElementById('turnLabel').readOnly = false;
+      document.getElementById('adjustemtLabel').readOnly = false;
+      document.getElementById('kkLabel').readOnly = false;
+    }
+
+    if(val[5] == 1){
+      // console.log("save");
+      // document.getElementById('graph1').style.display = 'none';
+      // document.getElementById('graph2').style.display = 'block';
+
+      document.getElementById('fileLabel1').value = val[0];
+      document.getElementById('drawingLabel1').value = val[2];
+      document.getElementById('issueLabel1').value = val[3];
+
+      // onkeypress="return false;" style="caret-color: transparent !important; background-color: rgba(226, 226, 226, 0.8);"
+      document.getElementById('lengthLabel1').value = val[6];
+      document.getElementById('middleLabel').value = val[7];
+      document.getElementById('marksLabel').value = val[8];
+      document.getElementById('turnLabel').value = val[9];
+      document.getElementById('adjustemtLabel').value = val[10];
+      document.getElementById('kkLabel').value = val[11];
+
+      document.getElementById('lengthLabel1').readOnly = true;
+      // document.getElementById('middleLabel').readOnly = true;
+      document.getElementById('marksLabel').readOnly = true;
+      document.getElementById('turnLabel').readOnly = true;
+      document.getElementById('adjustemtLabel').readOnly = true;
+      document.getElementById('kkLabel').readOnly = true;
+    }
+  }
+
+  function fillgap(){
+    var val = (document.getElementById('placeLabel').value).replace(/[{('')}]/g, '').split(',');
+    document.getElementById('placeLabelx').value = val[0];
+    document.getElementById('colorLabel').value = "green";
+    document.getElementById('gapLabel').value = val[2];
+  }
+</script>
+
+<!-- Validation Status Report -->
+<section class="container-fluid" style="display: none;" id="report-container">
+  <nav class="navbar navbar-expand-sm bg-dark justify-content-center" style="margin-left: -15px; margin-right: -15px;">
+    <h6 style="color: white"> Validation Status Report </h6>
+  </nav>
+
+    <div class="row">
+      <div class="col-6">
+        <label for="selectLabel" class="col-form-label">Select Item Desc:</label>
+        <select class="custom-select col-8" id="selectLabel">
+          <option selected>Choose...</option>
+          <option value="1">All</option>
+          <option value="2">Archived</option>
+        </select>
+      </div>
+      <div class="col">
+        <label for="fileNameLabel" class="col-form-label">File Name: </label>
+        <label class="col-6" for="fileNameLabel"> fileNameLabel</label>
+      </div>
+      <div class="col">
+        <label for="statusLabel" class="col-form-label">Status:</label>
+        <select class="custom-select col-9" id="statusLabel">
+          <option selected>Choose...</option>
+          <option value="1">All</option>
+          <option value="2">Work</option>
+          <option value="3">Pending Validation</option>
+          <option value="4">Validated</option>
+          <option value="5">Validation Due</option>
+          <option value="6">Archived</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6">
+        <div class="form-check">
+          <input type="checkbox" class="form-check-input" id="validateDate">
+          <label class="form-check-label" for="validateDate">Validate Date</label>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="form-check">
+          <input type="checkbox" class="form-check-input" id="validateDueDate">
+          <label class="form-check-label" for="validateDueDate">Validation Due Date</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top: -0.5em;">
+      <div class="col-md-2">
+        <input type="text" name="From" id="From" class="form-control" placeholder="From Date"/>
+      </div>
+  
+      <div class="col-md-2">
+        <input type="text" name="to" id="to" class="form-control" placeholder="To Date"/>
+      </div>
+
+      <div class="col-md-2"></div>
+
+      <div class="col-md-2">
+        <input type="text" name="Fromx" id="Fromx" class="form-control" placeholder="From Date"/>
+      </div>
+  
+      <div class="col-md-2">
+        <input type="text" name="tox" id="tox" class="form-control" placeholder="To Date"/>
+      </div>
+
+      <div class="col-md-2">
+        <button type="button" class="btn btn-primary">View</button>
+      </div>
+    </div>
+
+  <div style="height: 60vh; overflow: scroll;">
+    <table class="table" style="text-align: center;">
+      <thead class="thead-dark">
+        <tr>
+          <th>File No.</th>
+          <th>Item Description</th>
+          <th>Drawing No.</th>
+          <th>Issue</th>
+          <th>Validated Date</th>
+          <th>Validation Due Date</th>
+          <th>Status</th>
+          <th>Comments</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <tr>
+            <td>Col 11</td>
+            <td>Col 12</td>
+            <td>Col 13</td>
+            <td>Col 14</td>
+            <td>Col 15</td>
+            <td>Col 16</td>
+            <td>Col 17</td>
+            <td>Col 18</td>
+          </tr>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="row justify-content-center" style="margin-top: 1em;">
+    <button type="button" class="btn btn-primary">Print Preview</button>
+  </div>
+  
+</section>
+
+<!-- Order List -->
+<section class="container-fluid" style="display: none;" id="list-container">
+  <nav class="navbar navbar-expand-sm bg-dark justify-content-center" style="margin-left: -15px; margin-right: -15px;">
+    <h6 style="color: white"> Order List </h6>
+  </nav>
+
+  <div class="row">
+    <div class="col-sm-6 mb-0" style="height: 33vh; background-color: #F5F7FA;">
+        <div class="row mb-4" style="margin-top: 3%;">
+          <label class="col-sm-4 col-form-label">Status:</label>
+          <select class="custom-select col-sm-6" id="slcStatus" onchange="showSlcDes();" required>
+            <option selected>Choose...</option>
+            <option value="slcWork">Work</option>
+            <option value="slcFAI">Only for FAIs</option>
+            <option value="slcVal">Validated</option>
+            <option value="slcArc">Archived</option>
+          </select>
+        </div>
+        <div class="row mb-4" style="margin-top: 3%;">
+          <label class="col-sm-4 col-form-label">Item Desc:</label>
+
+          <select class="custom-select col-sm-6" id="initdes" style="display: block;" required>
+            <option selected>Choose...</option>
+          </select>
+
+          <select class="custom-select col-sm-6" id="workdes" onchange="workdes();" style="display: none;" required>
+            <option selected>Choose...</option>
+            {% for sub11 in sub11 %}
+              {% if sub11[4] == "Work" and sub11[5] == 1 %}
+                <option value='{{ sub11 }}'>{{ sub11[1] }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+
+          <select class="custom-select col-sm-6" id="faides" onchange="faides();" style="display: none;" required>
+            <option selected>Choose...</option>
+            {% for sub11 in sub11 %}
+              {% if sub11[4] == "Only for FAIs" %}
+                <option value='{{ sub11[1] }}'>{{ sub11[1] }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+
+          <select class="custom-select col-sm-6" id="valdes" onchange="valdes();" style="display: none;" required>
+            <option selected>Choose...</option>
+            {% for sub11 in sub11 %}
+              {% if sub11[4] == "Validated" %}
+                <option value='{{ sub11[1] }}'>{{ sub11[1] }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+
+          <select class="custom-select col-sm-6" id="arcdes" onchange="arcdes();" style="display: none;" required>
+            <option selected>Choose...</option>
+            {% for sub11 in sub11 %}
+              {% if sub11[4] == "Archived" %}
+                <option value='{{ sub11[1] }}'>{{ sub11[1] }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+
+        </div>
+        <div class="row mb-4">
+          <label class="col-sm-4 col-form-label">Number of Turns:</label>
+          <input type="text" class="form-control col-sm-6" id="slcdeslen" placeholder="Enter Cord Length" required readonly>
+        </div>
+    </div>
+
+    <div class="col-sm-6 mb-0" style="height: 33vh; background-color: #F5F7FA;">
+      <form action="/addexetbl" method="post">
+      <div class="row mb-4" style="margin-top: 3%;">
+        <label class="col-sm-4 col-form-label">File No:</label>
+        <input type="text" class="form-control col-sm-6" name="slcdesfile" id="slcdesfile" placeholder="File No" required readonly>
+      </div>
+      <div class="row mb-4">
+        <label class="col-sm-4 col-form-label">Drawing No:</label>
+        <input type="text" class="form-control col-sm-6" id="slcdesdra" placeholder="Drawing No" required readonly>
+      </div>
+      <div class="row mb-4">
+        <label class="col-sm-4 col-form-label">Issue:</label>
+        <input type="text" class="form-control col-sm-6" id="slcdesiss" placeholder="Issue" required readonly>
+      </div>
+    </div>
+  </div>
+
+  <!-- <form action="/addexetbl" method="post"> -->
+    <div class="row justify-content-center">
+      <input type="submit" name="btnadd" class="btn btn-primary col-sm-1" style="margin-right: 1em;" value="Add">
+    </div>
+  <!-- </form> -->
+
+  <div style="height: 45vh; overflow: scroll;">
+    <table class="table" id="sclexetbl" style="text-align: center; margin-top: 0.5em;">
+      <thead class="thead-dark">
+        <tr>
+          <th>File No.</th>
+          <th>Item Description</th>
+          <th>Drawing No.</th>
+          <th>Issue</th>
+          <th>Status</th>
+          <th>No of Turns</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sub12 in sub12 %}
+          {% if sub12[4] == "Work" %}
+            <tr>
+              <tr>
+                <td>{{ sub12[0] }}</td>
+                <td>{{ sub12[1] }}</td>
+                <td>{{ sub12[2] }}</td>
+                <td>{{ sub12[3] }}</td>
+                <td>{{ sub12[4] }}</td>
+                <td>{{ sub12[9] }}</td>
+              </tr>
+            </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="row justify-content-center" style="margin-top: 0.5em;">
+    <input type="submit" name="btnadd" class="btn btn-primary col-sm-1" style="margin-right: 1em;" value="Save">
+    <input type="submit" name="btnadd" class="btn btn-danger col-sm-1" style="margin-right: 1em;" value="Remove">
+    <input type="submit" name="btnadd" class="btn btn-danger col-sm-1" value="Clear">
+    
+  </div>
+</form>
+</section>
+
+<script>
+  function hideAllDes() {
+    document.getElementById('initdes').style.display = 'none';
+    document.getElementById('workdes').style.display = 'none';
+    document.getElementById('faides').style.display = 'none';
+    document.getElementById('valdes').style.display = 'none';
+    document.getElementById('arcdes').style.display = 'none';
+  }
+
+  function workdes() {
+    var val = (document.getElementById('workdes').value).replace(/[{('')}]/g, '').split(',');
+    document.getElementById('slcdeslen').value = val[6];
+    document.getElementById('slcdesfile').value = val[0];
+    document.getElementById('slcdesdra').value = val[2];
+    document.getElementById('slcdesiss').value = val[3];
+  }
+
+  function faides() {
+    var val = (document.getElementById('faides').value).replace(/[{('')}]/g, '').split(',');
+    document.getElementById('slcdeslen').value = val[6];
+    document.getElementById('slcdesfile').value = val[0];
+    document.getElementById('slcdesdra').value = val[2];
+    document.getElementById('slcdesiss').value = val[3];
+  }
+
+  function valdes() {
+    var val = (document.getElementById('valdes').value).replace(/[{('')}]/g, '').split(',');
+    document.getElementById('slcdeslen').value = val[6];
+    document.getElementById('slcdesfile').value = val[0];
+    document.getElementById('slcdesdra').value = val[2];
+    document.getElementById('slcdesiss').value = val[3];
+  }
+
+  function arcdes() {
+    var val = (document.getElementById('arcdes').value).replace(/[{('')}]/g, '').split(',');
+    document.getElementById('slcdeslen').value = val[6];
+    document.getElementById('slcdesfile').value = val[0];
+    document.getElementById('slcdesdra').value = val[2];
+    document.getElementById('slcdesiss').value = val[3];
+  }
+
+  function showSlcDes() {
+    var sat = document.getElementById("slcStatus").value;
+    console.log(sat);
+    if(sat == "Choose..."){
+      hideAllDes();
+      document.getElementById('initdes').style.display = 'block';
+    }
+    if(sat == "slcWork"){
+      hideAllDes();
+      document.getElementById('workdes').style.display = 'block';
+    }
+    if(sat == "slcFAI"){
+      hideAllDes();
+      document.getElementById('faides').style.display = 'block';
+    }
+    if(sat == "slcVal"){
+      hideAllDes();
+      document.getElementById('valdes').style.display = 'block';
+    }
+    if(sat == "slcArc"){
+      hideAllDes();
+      document.getElementById('arcdes').style.display = 'block';
+    }
+  }
+
+  var table = document.getElementById("sclexetbl"),rIndex;
+            
+  for(var i = 1; i < table.rows.length; i++)
+  {
+      table.rows[i].onclick = function()
+      {
+        rIndex = this.rowIndex;
+        
+        document.getElementById("slcdesfile").value = this.cells[0].innerHTML;
+        document.getElementById("slcdesdra").value = this.cells[2].innerHTML;
+        document.getElementById("slcdesiss").value = this.cells[3].innerHTML;
+      };
+  }
+
+</script>
+
+<!-- Execute -->
+<section class="container-fluid" style="display: none;" id="execute-container">
+  <nav class="navbar navbar-expand-sm bg-dark justify-content-center" style="margin-left: -15px; margin-right: -15px;">
+    <h6 style="color: white"> Execute </h6>
+  </nav>
+
+  <form action="/execute" method="post">
+  <div class="row mb-12 justify-content-center" style="margin-top: 1%; margin-bottom: 1%;">
+    <input type="text" id="exetbldata" value="{{ exe }}" style="display: none;">
+    <input type="submit" name='btnexe' class="btn btn-primary col-sm-1" style="margin-right: 1em;" id="btnStart" value="Start">
+    <input type="button" class="btn btn-primary col-sm-1" style="margin-right: 1em;" onclick="stopRun();" value="Stop">
+    <input type="submit" name='btnexe' class="btn btn-primary col-sm-1" style="margin-right: 1em;" onclick="pauseRun();" value="Pause">
+    <!-- <input type="submit" name='btnexe' class="btn btn-primary col-sm-1" style="margin-right: 1em;" value="Clear"> -->
+    <input type="submit" name='btnexe' class="btn btn-primary col-sm-1" value="Pre Print">
+  </div>
+
+  <div class="row">
+    <div style="height: 60vh; overflow: scroll; display: block;" class="col-8">
+      <table id="exetbl" class="table" style="text-align: center;">
+        <thead class="thead-dark">
+          <tr>
+            <th>File No.</th>
+            <th>Item Description</th>
+            <th>Drawing No.</th>
+            <th>Issue</th>
+            <th>Status</th>
+            <th>No of Turns</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sub12 in sub12 %}
+              <tr>
+                <tr>
+                  <td>{{ sub12[0] }}</td>
+                  <td>{{ sub12[1] }}</td>
+                  <td>{{ sub12[2] }}</td>
+                  <td>{{ sub12[3] }}</td>
+                  <td>{{ sub12[4] }}</td>
+                  <td>{{ sub12[9] }}</td>
+                  <td><button type="submit" name="btnexe" class="btn btn-primary" value="{{ sub12[0] }}">Select</button></td>
+                  <td style="display: none;">{{ sub12[6] }}</td>
+                  <td style="display: none;">{{ sub12[8] }}</td>
+                </tr>
+              </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div style="height: 60vh; overflow: scroll; overflow-x: hidden;" class="col-4">
+      <table class="table" style="text-align: center;">
+        <thead class="thead-dark">
+          <tr>
+            <th>Place No</th>
+            <th>Color</th>
+            <th>Gap</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for exe in exe %}
+          <tr>
+            <tr>
+              <td>{{ exe[0] }}</td>
+              <td>{{ exe[1] }}</td>
+              <td>{{ exe[2] }}</td>
+            </tr>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <div class="row" style="margin-left: 12%;">
+    {% if sub13[0] == "null" %}
+    <div class="col-6" style="font-size: 20px;">
+      <!-- <div>
+        <label for="fileNameLabel" class="col-form-label" style="font-weight: bold;">Sel Part No: </label>
+        <label class="col-6" for="fileNameLabel"> Value</label>
+      </div> -->
+      <div>
+        <label class="col-form-label" style="font-weight: bold;">Drawing No: </label>
+        <label class="col-6" id="exetxt1">{{ sub13[0][2] }}</label>
+      </div>
+      <div>
+        <label class="col-form-label" style="font-weight: bold;">Issue: </label>
+        <label class="col-6" id="exetxt2">{{ sub13[0][3] }}</label>
+      </div>
+      <!-- <div>
+        <label for="fileNameLabel" class="col-form-label" style="font-weight: bold;">Weight: </label>
+        <label class="col-6" for="fileNameLabel"> Value</label>
+      </div> -->
+    </div>
+
+    <div class="col-6" style="font-size: 20px;">
+      <div>
+        <label class="col-form-label" style="font-weight: bold;">Coard Length: </label>
+        <label class="col-6" id="exetxt3">{{ sub13[0][6] }}</label>
+      </div>
+      <!-- <div>
+        <label for="fileNameLabel" class="col-form-label" style="font-weight: bold;">No of Nets: </label>
+        <label class="col-6" for="fileNameLabel"> Value</label>
+      </div> -->
+      <div>
+        <label class="col-form-label" style="font-weight: bold;">Total Marks: </label>
+        <label class="col-6" id="exetxt4">{{ sub13[0][8] }}</label>
+      </div>
+
+      <input type="text" id="totTurnexe" value="{{ sub13[0][9] }}" style="display: none;">
+      <!-- <div>
+        <label for="fileNameLabel" class="col-form-label" style="font-weight: bold;">JSL No: </label>
+        <label class="col-6" for="fileNameLabel"> Value</label>
+      </div> -->
+    </div>
+    {% endif %}
+  </div>
+
+  <div style="font-size: 20px; margin-left: 40%;">
+    <label class="col-form-label" style="font-weight: bold;">Progress: </label>
+    <label id="exetxt5">0</label>
+  </div>
+</form>
+</section>
+
+<script>
+  var table = document.getElementById("exetbl"),rIndex;
+  for(var i = 1; i < table.rows.length; i++)
+  {
+      table.rows[i].onclick = function(event)
+      {
+        document.getElementById('exetxt1').innerHTML = this.cells[2].innerHTML;
+        document.getElementById('exetxt2').innerHTML = this.cells[3].innerHTML;
+        document.getElementById('exetxt3').innerHTML = this.cells[7].innerHTML;
+        document.getElementById('exetxt4').innerHTML = this.cells[8].innerHTML;
+      };
+  }
+</script>
+
+<!-- Execute Error -->
+<section class="container-fluid" style="display: none;" id="execute-error-container">
+  <nav class="navbar navbar-expand-sm bg-dark justify-content-center" style="margin-left: -15px; margin-right: -15px;">
+    <h6 style="color: white"> Execute </h6>
+  </nav>
+
+  <div class="container" style="margin-top: 3%;">
+    <div class="text-center">
+        <div class="row col-md-12">
+            <div class="col-md-4"></div>        
+            <div class="col-md-4">
+              <button class="btn btn-primary btn-block p-4 rounded-1" id="btnActAuto">
+                Activate Auto Mode
+              </button>
+
+              <!-- <button class="btn btn-danger btn-block p-4 rounded-1" id="btnActManual" style="display: none; margin-top: -0.01em;">
+                Manual Mode
+              </button> -->
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+
+        <div id="error-code" style="
+          display: none; 
+          margin-top: 5%; 
+          font-size: 30px; 
+          font-family: 'Courier New', Courier, monospace; 
+          font-weight: bold;
+        "> Sensors Error! </br> Please Activate the Home Mode and try again!</div>
+
+        <div class="row col-md-12">
+          <div class="col-md-4"></div>        
+          <div class="col-md-4">
+            <button class="btn btn-primary btn-block p-4 rounded-1" id="btnActHome" style="display: none;">
+              Activate Home Mode
+            </button>
+          </div>
+          <div class="col-md-4"></div>
+        </div>
+
+    </div>
+  </div>
+
+</section>
+
+<!-- Generate Report -->
+<section class="container-fluid" style="display: none;" id="qa-status-container">
+    <nav class="navbar navbar-expand-sm bg-dark justify-content-center" style="margin-left: -15px; margin-right: -15px;">
+      <h6 style="color: white"> QA Status Change </h6>
+    </nav>
+
+    <div class="row">
+      <div class="col-sm-6 mb-0" style="height: 30vh; background-color: #F5F7FA;">
+          <div class="row mb-4" style="margin-top: 1%;">
+            <label for="" class="col-sm-4 col-form-label">Status:</label>
+            <select class="custom-select col-sm-6" id="" required>
+              <option selected>Choose...</option>
+              <option value="1">Work</option>
+              <option value="2">Only for FAIs</option>
+              <option value="3">Validated</option>
+              <option value="4">Archived</option>
+            </select>
+          </div>
+          <div class="row mb-4" style="margin-top: 1%;">
+            <label for="" class="col-sm-4 col-form-label">Item Desc:</label>
+            <select class="custom-select col-sm-6" id="" required>
+              <option selected>Choose...</option>
+              <option value="1">All</option>
+              <option value="2">Archived</option>
+            </select>
+          </div>
+      </div>
+  
+      <div class="col-sm-6 mb-0" style="height: 30vh; background-color: #F5F7FA;">
+        <div class="row mb-4" style="margin-top: 1%;">
+          <label for="" class="col-sm-4 col-form-label">File No:</label>
+          <input type="text" class="form-control col-sm-6" id="" placeholder="File No" required>
+        </div>
+        <div class="row mb-4">
+          <label for="" class="col-sm-4 col-form-label">Drawing No:</label>
+          <input type="text" class="form-control col-sm-6" id="" placeholder="Drawing No" required>
+        </div>
+        <div class="row mb-4">
+          <label for="" class="col-sm-4 col-form-label">Issue:</label>
+          <input type="text" class="form-control col-sm-6" id="" placeholder="Issue" required>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm" style="height: 10vh; background-color: #F5F7FA;">
+        <div style="margin: 1.5vh; text-align: center;">
+          Cord Length:
+          <input type="text" value="1000" class="col-sm-3" style="border: 0; background-color: #F5F7FA;" readonly>
+        </div>
+      </div>
+      <div class="col-sm" style="height: 10vh; background-color: #F5F7FA;">
+        <div style="margin: 1.5vh; text-align: center;">
+          Middle Point:
+          <input type="text" value="10" class="col-sm-3" style="border: 0; background-color: #F5F7FA;" readonly>
+        </div>
+      </div>
+      <div class="col-sm" style="height: 10vh; background-color: #F5F7FA;">
+        <div style="margin: 1.5vh; text-align: center;">
+          Total Marks:
+          <input type="text" value="10" class="col-sm-3" style="border: 0; background-color: #F5F7FA;" readonly>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-6 mb-0" style="height: 45vh; margin-top: 0.5em; display: block;" id="">
+        <div style="height: 40vh; overflow: scroll; overflow-x: hidden;">
+          <table class="table" style="text-align: center;">
+            <thead class="thead-dark">
+              <tr>
+                <th>Place No</th>
+                <th>Color</th>
+                <th>Gap</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- {% for jig in jig %}
+                  <tr>
+                    <tr>
+                      {% if jig[13] == "green" %}
+                        <td style="color: green;">{{ jig[12] }}</td>
+                        <td style="color: green;">{{ jig[13] }}</td>
+                        <td style="color: green;">{{ jig[14] }}</td>
+                      {% elif jig[13] == "blue" %}
+                        <td style="color: blue;">{{ jig[12] }}</td>
+                        <td style="color: blue;">{{ jig[13] }}</td>
+                        <td style="color: blue;">{{ jig[14] }}</td>
+                      {% else %}
+                        <td style="color: black;">{{ jig[12] }}</td>
+                        <td style="color: black;">{{ jig[13] }}</td>
+                        <td style="color: black;">{{ jig[14] }}</td>
+                      {% endif %}
+                    </tr>
+                  </tr>
+              {% endfor %} -->
+            </tbody>
+          </table>
+        </div>
+        <center>
+          <button type="button" class="btn btn-primary" style="margin-top: 3%;">Preview Marks</button>
+        </center>
+      </div>
+      
+
+      <div class="col-sm" style="text-align: center;">
+        <button type="button" class="btn btn-secondary">Only for FAI</button>
+        <button type="button" class="btn btn-secondary">Validated</button>
+        <button type="button" class="btn btn-secondary">Archived</button>
+        <button type="button" class="btn btn-secondary">Delete Archived</button>
+
+        <div class="col-sm-12 mb-1">
+          <div class="row mb-4" style="margin-top: 3%;" >
+            <label for="" class="col-sm-4 col-form-label">Date for FAI:</label>
+            <input type="text" class="form-control col-sm-6" placeholder="Date for FAI" required>
+
+            <label for="" class="col-sm-4 col-form-label" style="margin-top: 1%;">Date validated:</label>
+            <input type="text" class="form-control col-sm-6" style="margin-top: 1%;" placeholder="Date validated" required>
+
+            <label for="" class="col-sm-4 col-form-label" style="margin-top: 1%;">Validation Due:</label>
+            <input type="text" class="form-control col-sm-6" style="margin-top: 1%;" placeholder="Validation Due" required>
+ 
+            <label for="" class="col-sm-4 col-form-label" style="margin-top: 1%;">Date Archived:</label>
+            <input type="text" class="form-control col-sm-6" style="margin-top: 1%;" placeholder="Date Archived" required>
+
+            <label for="" class="col-sm-4 col-form-label" style="margin-top: 1%;">Comment:</label>
+            <input type="text" class="form-control col-sm-6" style="margin-top: 1%;" placeholder="Comment" required>
+          </div>
+
+          <button type="button" class="btn btn-primary">Save</button>
+        </div>
+
+      </div>
+    </div>
+
+</section>
+
+<!-- QA Updated History -->
+<!-- <section class="container-fluid" style="display: none;" id="qa-report-container">
+    <nav class="navbar navbar-expand-sm bg-dark justify-content-center" style="margin-left: -15px; margin-right: -15px;">
+      <h6 style="color: white"> QA Updated History </h6>
+    </nav>
+
+    <div class="text-center row" style="margin-top: 1%;">
+        <div class="col-md-3"></div>
+        <div class="col-md-3">
+          <input type="text" name="Fromx" id="Fromx" class="form-control" placeholder="From Date"/>
+        </div>
+    
+        <div class="col-md-3">
+          <input type="text" name="tox" id="tox" class="form-control" placeholder="To Date"/>
+        </div>
+        <div class="col-md-3"></div>
+    </div>
+
+    <div class="row justify-content-center" style="margin-top: 1%;">
+        <div class="col-md-3">
+          <input type="button" name="rangex" id="rangex" value="Range" class="btn btn-success col-md-12"/>
+        </div>
+    
+        <div class="col-md-3">
+          <form method = "POST" style="text-align: center;">
+            <a href="" class="btn btn-secondary col-md-12">Download Data</a>
+          </form>
+        </div>
+    </div>
+
+    <div style="height: 65vh; overflow: scroll;">
+        <table class="table" style="text-align: center; margin-top: 0.5em;">
+          <thead class="thead-dark">
+            <tr>
+              <th>Row 1</th>
+              <th>Row 2</th>
+              <th>Row 3</th>
+              <th>Row 4</th>
+              <th>Row 5</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <tr>
+                <td>Col 11</td>
+                <td>Col 12</td>
+                <td>Col 13</td>
+                <td>Col 14</td>
+                <td>Col 15</td>
+              </tr>
+            </tr>
+          </tbody>
+        </table>
+    </div>
+
+</section> -->
+
+<!-- Other Operations -->
+<!-- <section class="container-fluid" style="display: none;" id="other-container">
+    <nav class="navbar navbar-expand-sm bg-dark justify-content-center" style="margin-left: -15px; margin-right: -15px;">
+      <h6 style="color: white"> Other Operations </h6>
+    </nav>
+
+    <div class="container" style="margin-top: 20vh;">
+        <div class="jumbotron text-center d-flex justify-content-center">          
+            <button class="btn btn-primary col-md-4 btn-block p-4 rounded-1" id="btnGetBaridOut" style="margin: 1%;">
+                Get Braid Out
+            </button>
+            
+            <button class="btn btn-primary col-md-4 btn-block p-4 rounded-1" id="btnSetHeat" style="margin: 1%;">
+                Set Heat Seal
+            </button>
+        </div>
+    </div>
+
+</section> -->
+
+<!-- Machine Manual Operations -->
+<section class="container-fluid" style="display: none;" id="operate-container">
+    <nav class="navbar navbar-expand-sm bg-dark justify-content-center" style="margin-left: -15px; margin-right: -15px;">
+      <h6 style="color: white"> Machine Manual Operations </h6>
+    </nav>
+
+    <!-- <div class="row col-md-12">
+      <div class="col-md-4"></div>        
+      <div class="col-md-4">
+        <button class="btn btn-primary btn-block p-4 rounded-1" id="btnActManual">
+          Activate Manual Mode
+        </button>
+      </div>
+      <div class="col-md-4"></div>
+    </div> -->
+
+    <div class="container" style="margin-top: 3%;">
+        <div class="text-center">
+            <div class="row col-md-12" style="margin: 1%;">            
+                <div class="col-md-4">
+                  <button class="btn btn-primary btn-block p-4 rounded-1" id="btnUpMainRoll">
+                    Up Main Roll
+                  </button>
+
+                  <button class="btn btn-danger btn-block p-4 rounded-1" id="btnDownMainRoll" style="display: none; margin-top: -0.01em;">
+                    Down Main Roll
+                  </button>
+                </div>
+                
+                <div class="col-md-4">
+                  <button class="btn btn-primary btn-block p-4 rounded-1" id="btnPullGuidBoard">
+                    Pull Guid Board
+                  </button>
+
+                  <button class="btn btn-danger btn-block p-4 rounded-1" id="btnResetGuidBoard" style="display: none; margin-top: -0.01em;">
+                    Reset Guid Board
+                  </button>
+                </div>
+                <div class="col-md-4">
+                  <button class="btn btn-primary btn-block p-4 rounded-1" id="btnBladeon">
+                    Cutter Blade
+                  </button>
+
+                  <button class="btn btn-danger btn-block p-4 rounded-1" id="btnBladeoff" style="display: none; margin-top: -0.01em;">
+                    Stop Cutter Blade
+                  </button>
+               </div>
+            </div>
+            <div class="row col-md-12" style="margin: 1%;">            
+                
+                <div class="col-md-4">
+                  <button class="btn btn-primary btn-block p-4 rounded-1" id="btnDragBaraidIn">
+                    Drag Braid In
+                  </button>
+
+                  <button class="btn btn-danger btn-block p-4 rounded-1" id="btnresetDragBaraidIn" style="display: none; margin-top: -0.01em;">
+                    Stop Drag Braid In
+                  </button>
+               </div>
+
+                <div class="col-md-4">
+                  <button class="btn btn-primary btn-block p-4 rounded-1" id="btnactHomeManual">
+                    Home
+                  </button>
+               </div>
+
+               <div class="col-md-4">
+                  <button class="btn btn-primary btn-block p-4 rounded-1" id="btnGetBaridOut">
+                    Get Braid Out
+                  </button>
+
+                  <button class="btn btn-danger btn-block p-4 rounded-1" id="btnresetGetBaridOut" style="display: none; margin-top: -0.01em;">
+                    Stop Drag Braid In
+                  </button>
+                </div>
+            </div>
+            <div class="row col-md-12" style="margin: 1%;">            
+                <div class="col-md-4">
+                  <button class="btn btn-primary btn-block p-4 rounded-1" id="btnReleaseDraggingRoll">
+                    Release <br> Dragging Roll
+                  </button>
+
+                  <button class="btn btn-danger btn-block p-4 rounded-1" id="btnSetDraggingRoll" style="display: none; margin-top: -0.01em;">
+                    Set <br> Dragging Roll
+                  </button>
+                </div>
+                
+                <div class="col-md-4">
+                  <button class="btn btn-primary btn-block p-4 rounded-1" id="btnSetHeat">
+                    Set <br> Heat Seal
+                  </button>
+                  <button class="btn btn-danger btn-block p-4 rounded-1" id="btnresetSetHeat" style="display: none; margin-top: -0.01em;">
+                    Reset <br> Heat Seal
+                  </button>
+                </div>
+
+                <div class="col-md-4">
+                  <button class="btn btn-primary btn-block p-4 rounded-1" id="btnRunInkRoll">
+                    Run <br> Ink Roll
+                  </button>
+                  <button class="btn btn-danger btn-block p-4 rounded-1" id="btnStopInkRoll" style="display: none; margin-top: -0.01em;">
+                    Stop <br> Ink Roll
+                  </button>
+               </div>
+            </div>
+
+            <div class="row col-md-12" style="margin: 1%;">
+              <div class="col-md-4">
+                  <button class="btn btn-primary btn-block p-4 rounded-1" id="btnPreprint1">
+                    Preprint 1
+                  </button>
+
+                  <button class="btn btn-danger btn-block p-4 rounded-1" id="btnStpPreprint1" style="display: none; margin-top: -0.01em;">
+                    Stop Preprint 1
+                  </button>
+              </div>
+
+              <div class="col-md-4">
+                <button class="btn btn-primary btn-block p-4 rounded-1" id="btnPreprint2">
+                  Preprint 2
+                </button>
+
+                <button class="btn btn-danger btn-block p-4 rounded-1" id="btnStpPreprint2" style="display: none; margin-top: -0.01em;">
+                  Stop Preprint 2
+                </button>
+             </div>
+
+             <div class="col-md-4">
+              <button class="btn btn-primary btn-block p-4 rounded-1" id="btnPreprint3">
+                Preprint 3
+              </button>
+
+              <button class="btn btn-danger btn-block p-4 rounded-1" id="btnStpPreprint3" style="display: none; margin-top: -0.01em;">
+                Stop Preprint 3
+              </button>
+            </div>
+          </div>
+
+          <div class="row col-md-12" style="margin: 1%;">
+          
+            <div class="col-md-4">
+              <button class="btn btn-primary btn-block p-4 rounded-1" id="btnCutterFwd">
+                Cutter Forward
+              </button>
+
+              <button class="btn btn-danger btn-block p-4 rounded-1" id="btnStpCutter1" style="display: none; margin-top: -0.01em;">
+                Stop Cutter
+              </button>
+            </div>
+
+            <div class="col-md-4"></div>
+
+            <div class="col-md-4">
+              <button class="btn btn-primary btn-block p-4 rounded-1" id="btnCutterRvs">
+                Cutter Reverse
+              </button>
+
+              <button class="btn btn-danger btn-block p-4 rounded-1" id="btnStpCutter2" style="display: none; margin-top: -0.01em;">
+                Stop Cutter
+              </button>
+            </div>
+          
+          </div>
+            
+            <!-- <h6 class="text-center font-weight-bold" style="display: block; font-size: 20px; margin-top: 10vh;"> Paused by Push Button </h6>
+            <button type="button" class="btn btn-danger col-md-2" id="btnClose">close</button> -->
+        </div>
+    </div>        
+</section>
+
+
+<!-- Machine Manual Operations -->
+<section class="container-fluid" style="display: none;" id="operate-error-container">
+  <nav class="navbar navbar-expand-sm bg-dark justify-content-center" style="margin-left: -15px; margin-right: -15px;">
+    <h6 style="color: white"> Machine Manual Operations </h6>
+  </nav>
+
+  <div class="container" style="margin-top: 3%;">
+    <div class="text-center">
+
+      <div class="row col-md-12">
+        <div class="col-md-4"></div>        
+        <div class="col-md-4">
+          <button class="btn btn-primary btn-block p-4 rounded-1" id="btnActManual">
+            Activate Manual Mode
+          </button>
+        </div>
+        <div class="col-md-4"></div>
+      </div>
+
+    </div>
+  </div>
+
+
+</section>
+
+
+<!-- Change Password -->
+<section class="container-fluid center" style="display: none;" id="change-pswd-container">
+    <nav class="navbar navbar-expand-sm bg-dark justify-content-center" style="margin-left: -15px; margin-right: -15px;">
+      <h6 style="color: white"> Change Password </h6>
+    </nav>
+
+    <!-- <form style="margin-top: 5%; margin-left: 33vw">
+        <div class="form-group">
+          <label>Username:</label>
+          <input type="text" class="form-control col-md-6" name="username" id="InputUserName">
+          <label>Current Password:</label>
+          <input type="password" class="form-control col-md-6" name="currentPass" id="InputUserPassword">
+          <br><br>
+          <label>New Password:</label>
+          <input type="password" class="form-control col-md-6" name="newPass" id="InputNewPassword">
+        </div>
+        <p>
+          <input type="submit" name='submit' class="btn btn-primary" value="Update" id="updatebtn">
+          <input type="submit" name='submit' class="btn btn-basic" value="Cancel">
+        </p>
+    </form> -->
+
+    <form method = "POST" action = "/chngpswd" id="updateForm" style="margin-top: 5%;">
+      <center>
+        <div class="form-group">
+          <label for="InputUserName" style="padding-right: 40vw;">Username:</label>
+          <input type="text" class="form-control col-md-6" id="InputUserName"
+                  placeholder="Enter Username" name="InputUserName" required>
+        <!-- </div>
+        <div class="form-group"> -->
+          <label for="InputUserPassword" style="padding-right: 36vw;">Current Password:</label>
+          <input type="password" class="form-control col-md-6" id="InputUserPassword"
+                  placeholder="Enter Current Password" name="InputUserPassword" required>
+        <!-- </div>
+
+        <div class="form-group"> -->
+          <label for="InputNewPassword" style="padding-right: 38vw;">New Password:</label>
+          <input type="password" class="form-control col-md-6" id="InputNewPassword"
+                  placeholder="Enter New Password" name="InputNewPassword" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block col-md-2" value="Submit" id="updatebtn">Update</button>
+      </center>
+      
+    </form>
+
+</section>
+
+
+<!-- Change Config -->
+<section class="container-fluid center" style="display: none;" id="change-config-container">
+  <nav class="navbar navbar-expand-sm bg-dark justify-content-center" style="margin-left: -15px; margin-right: -15px;">
+    <h6 style="color: white"> Change Config </h6>
+  </nav>
+
+  <form method="" action="" id="updateForm" style="margin-top: 5%;">
+    <div class="row justify-content-center" >
+      <!-- <center> -->
+        <div class="form-group">
+          <label for="rpm1" >RPM 1:</label>
+          <input type="text" class="form-control col-md-12" id="rpm1"
+                  placeholder="Enter RPM 1" name="rpm1" required>
+        <!-- </div>
+        <div class="form-group"> -->
+          <label for="rpm2" style="margin-top: 3%;">RPM 2:</label>
+          <input type="text" class="form-control col-md-12" id="rpm2"
+                  placeholder="Enter RPM 2" name="rpm2" required>
+        <!-- </div>
+
+        <div class="form-group"> -->
+          <label for="rpm3" style="margin-top: 3%;">RPM 3:</label>
+          <input type="text" class="form-control col-md-12" id="rpm3"
+                  placeholder="Enter RPM 3" name="rpm3" required>
+
+          <label for="rpm3" style="margin-top: 3%;">Length Treshold:</label>
+          <input type="text" class="form-control col-md-12" id="ltresh"
+                  placeholder="Enter Treshold" name="ltresh" required>
+        </div>
+
+      <!-- </center> -->
+    </div>
+    <center>
+      <button type="submit" class="btn btn-primary btn-block col-md-1" value="Submit" id="updatecnfbtn">Update</button>
+    </center>
+
+  </form>
+
+</section>
+
+<!-- About -->
+<section class="container-fluid center" style="display: none; margin-top: 20%;" id="about-container">
+    <section class="row justify-content-center">
+        <h4 class="text-center font-weight-bold"> Braid Marking And Cutting System </h4>
+    </section>
+    <section class="row justify-content-center">
+        <p class="text-center"> Developed by Rex Industries </p>
+    </section>
+</section>
+
+<!-- Modal -->
+<!-- <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title" id="exampleModalLabel">Preview</h6>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+          <canvas id="myChart" style="width: 100%; max-width: 1200px; height: 100%; max-height: 100px;"></canvas>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div> -->
+
+<script>
+  var { ipcRenderer } = require("electron");
+  var inval = document.getElementById("domTextElement").value;
+  var lashedMessages = null;
+
+  lashedMessages = "{{ get_flashed_messages() }}";
+  // console.log(lashedMessages);
+
+  // with("{{ get_flashed_messages() }}" != null || "{{ get_flashed_messages() }}" != "[]"){
+  //   lashedMessages = "{{ get_flashed_messages() }}";
+  //   console.log(lashedMessages);
+  // }
+  
+  function hideAll() {
+    document.getElementById('file-container').style.display = 'none';
+    document.getElementById('jigs-container').style.display = 'none';
+    document.getElementById('report-container').style.display = 'none';
+    document.getElementById('about-container').style.display = 'none';
+    document.getElementById('change-pswd-container').style.display = 'none';
+    document.getElementById('change-config-container').style.display = 'none';
+    document.getElementById('operate-container').style.display = 'none';
+    document.getElementById('list-container').style.display = 'none';
+    document.getElementById('execute-container').style.display = 'none';
+    document.getElementById('execute-error-container').style.display = 'none';
+    document.getElementById('operate-error-container').style.display = 'none';
+    document.getElementById('qa-status-container').style.display = 'none';
+  }
+
+  // var xValues = ["1", "2", "3", "4", "5", "1", "2", "3", "4", "5"];
+  // var yValues = [50, 50, 50, 50, 50, 50, 50, 50, 50, 50];
+  // var barColors = ["green", "black","blue","black","green","green", "black","blue","black","green"];
+
+  // new Chart("myChart", {
+  //   type: "bar",
+  //   data: {
+  //     labels: xValues,
+  //     datasets: [{
+  //       backgroundColor: barColors,
+  //       data: yValues,
+  //       barThickness: 10,
+  //     }]
+  //   },
+  //   options: {
+  //     legend: {display: false},
+  //     title: {display: false},
+  //     tooltips: {enabled: false},
+  //     hover: {mode: null},
+
+  //     scales: {
+  //       xAxes: [{
+  //         gridLines: {display:false},
+  //         ticks: {display: false},
+  //         barPercentage : 1,
+  //       }],
+  //       yAxes: [{
+  //         gridLines: {display:false},
+  //         ticks: {display: false},
+  //         barPercentage : 1,
+  //       }]
+  //     }
+  //   },
+  // });
+
+  function showModal(){
+    console.log("show modal");
+    var obj = document.getElementById("prvtbldata").value;
+    // console.log(obj);
+    ipcRenderer.invoke("showmodal", obj);
+    // $('#exampleModal').modal({
+    //   show: true,
+    //   backdrop: false,
+    //   focus: true,
+    //   keyboard: false
+    // });
+  }
+
+  if(inval == 'sub11'){
+      hideAll();
+      document.getElementById('file-container').style.display = 'block';
+  }
+  if(inval == 'sub12'){
+      hideAll();
+      document.getElementById('jigs-container').style.display = 'block';     
+  }
+  if(inval == 'sub13'){
+      hideAll();
+      document.getElementById('report-container').style.display = 'block';
+  }
+  if(inval == 'sub14'){
+      hideAll();
+      document.getElementById('qa-status-container').style.display = 'block';
+  }
+
+  if(inval == 'sub21'){
+      hideAll();
+      document.getElementById('list-container').style.display = 'block';
+  }
+  if(inval == 'sub22'){
+      hideAll();
+      document.getElementById('execute-error-container').style.display = 'block';
+  }
+  if(inval == 'sub23'){
+      hideAll();
+      document.getElementById('execute-container').style.display = 'block';
+  }
+
+  if(inval == 'sub31'){
+      hideAll();
+      document.getElementById('generate-container').style.display = 'block';
+  }
+  // if(inval == 'sub32'){
+  //     hideAll();
+  //     document.getElementById('qa-report-container').style.display = 'block';
+  // }
+
+  // if(data == 'sub41'){
+  //     hideAll();
+  //     document.getElementById('other-container').style.display = 'block';
+  // }
+
+  if(inval == 'sub41'){
+      hideAll();
+      document.getElementById('operate-error-container').style.display = 'block';
+  }
+  if(inval == 'sub42'){
+      hideAll();
+      document.getElementById('change-pswd-container').style.display = 'block';
+      // updatebtn.onclick = function(){
+      //     var username = document.getElementById("InputUserName");
+      //     var password = document.getElementById("InputUserPassword");
+      //     var newpassword = document.getElementById("InputNewPassword");
+
+      //     const obj = {username:username.value, password:password.value, newpassword:newpassword.value};
+      //     ipcRenderer.invoke("test", obj);
+      // }
+  }
+  if(inval == 'sub43'){
+      hideAll();
+      document.getElementById('about-container').style.display = 'block';
+  }
+  
+
+  if(inval == 'exe'){
+    hideAll();
+    document.getElementById('execute-container').style.display = 'block';
+    var ob = document.getElementById("exetbldata").value;
+    var trn = document.getElementById("totTurnexe").value;
+
+    const obj = {obj:ob, trn:trn};
+    ipcRenderer.invoke("startPro", obj);
+  }
+
+  if(inval == 'prePrint'){
+    hideAll();
+    document.getElementById('execute-container').style.display = 'block';
+    var ob = document.getElementById("exetbldata").value;
+    
+    const obj = {obj:ob, trn:1};
+    ipcRenderer.invoke("startPro", obj);
+  }
+
+  if(inval == 'preexe'){
+    hideAll();
+    document.getElementById('execute-container').style.display = 'block';
+  }
+
+  if(inval == 'prv'){
+    hideAll();
+    document.getElementById('jigs-container').style.display = 'block';
+    // var obj = document.getElementById("prvtbldata").value;
+    // console.log(obj);
+  }
+
+  if(inval == 'logout'){
+    ipcRenderer.invoke("logout", "logout");
+  }
+
+  if(lashedMessages != "[]"){
+    console.log('Not null');
+    console.log(lashedMessages);
+    ipcRenderer.invoke("flash", lashedMessages);
+  }
+
+  ipcRenderer.on("updater", (event, data)=>{
+      console.log(data);
+      document.getElementById('exetxt5').innerHTML = data[0];
+      if(data[4] == 1){
+        hideAll();
+        document.getElementById('execute-container').style.display = 'block';
+      }
+  });
+
+</script>
+
+{% endblock %}
