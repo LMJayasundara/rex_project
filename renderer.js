@@ -842,108 +842,205 @@ ipcMain.handle('startPro', (event, obj) => {
   var { obj, trn } = obj;
   clearInterval(turnUpdater);
 
-  master.writeMultipleRegisters(41090, [0, 0, trn, 0, 1]).then(function (resp) {
-    
-      var rotVal = fs.readFileSync('C:\\config\\config.txt','utf8').split(",").slice(5, 8).map(Number);
-      var const_data = [['green', 'black', 'blue'], rotVal];
+  var addData = function() {
+    return new Promise(function(resolve, reject) {
+      master.writeMultipleRegisters(41090, [0, 0, trn, 0, 1]).then(function (resp) {
+      
+        var rotVal = fs.readFileSync('C:\\config\\config.txt','utf8').split(",").slice(5, 8).map(Number);
+        var const_data = [['green', 'black', 'blue'], rotVal];
 
-      var arr = obj.replace(/[{(',')}]/g, '').split(" ");
+        var arr = obj.replace(/[{(',')}]/g, '').split(" ");
 
-      const n = 3;
-      const chunk = (arr, size) => {
-        const res = [];
-        for(let i = 0; i < arr.length; i++) {
-            if(i % size === 0){
-              res.push([arr[i]]);
-            }
-            else{
-              res[res.length-1].push(arr[i]);
-            };
+        const n = 3;
+        const chunk = (arr, size) => {
+          const res = [];
+          for(let i = 0; i < arr.length; i++) {
+              if(i % size === 0){
+                res.push([arr[i]]);
+              }
+              else{
+                res[res.length-1].push(arr[i]);
+              };
+          };
+          return res;
         };
-        return res;
-      };
 
-      var out = chunk(arr, n);
+        var out = chunk(arr, n);
 
-      for (let i = 0; i < out.length; i++) {
-        console.log(out[i][1]);
+        for (let i = 0; i < out.length; i++) {
+          console.log(out[i][1]);
 
-        if(out[i][1] == 'green'){
+          if(out[i][1] == 'green'){
 
-          master.writeSingleRegister(A(i, 0), const_data[1][0]).then(function (resp) {
-            // console.log(resp);
-            console.log(A(i, 0));
-            console.log(const_data[1][0]);
-          }, function (err) {
-            console.log(A(i, 0), " err")
-          });
-        }
-        if(out[i][1] == 'black'){
+            master.writeSingleRegister(A(i, 0), const_data[1][0]).then(function (resp) {
+              // console.log(resp);
+              console.log(A(i, 0));
+              console.log(const_data[1][0]);
+            }, function (err) {
+              console.log(A(i, 0), " err")
+            });
+          }
+          if(out[i][1] == 'black'){
+            
+            master.writeSingleRegister(A(i, 1), const_data[1][1]).then(function (resp) {
+              // console.log(resp);
+              console.log(A(i, 1));
+              console.log(const_data[1][1]);
+            }, function (err) {
+              console.log(A(i, 1), " err")
+            });
+          }
+          if(out[i][1] == 'blue'){
+            
+            master.writeSingleRegister(A(i, 2), const_data[1][2]).then(function (resp) {
+              // console.log(resp);
+              console.log(A(i, 2));
+              console.log(const_data[1][2]);
+            }, function (err) {
+              console.log(A(i, 2), " err")
+            });
+          }
+
           
-          master.writeSingleRegister(A(i, 1), const_data[1][1]).then(function (resp) {
+          master.writeSingleRegister(Dis(i), parseInt(out[i][2])).then(function (resp) {
             // console.log(resp);
-            console.log(A(i, 1));
-            console.log(const_data[1][1]);
+            console.log(parseInt(out[i][2]));
           }, function (err) {
-            console.log(A(i, 1), " err")
+            console.log(out[i][2], " err")
           });
         }
-        if(out[i][1] == 'blue'){
+
+        // bed distance tresh hold
+        var beddis = fs.readFileSync('C:\\config\\config.txt','utf8').split(",").slice(8, 9).map(Number);
+        master.writeSingleRegister(Dis(out.length), parseInt(beddis[0])).then(function (resp) {
+          // console.log(resp);
+          console.log(parseInt(beddis[0]));
+        }, function (err) {
+          console.log((out.length+1), " err")
+        });
+      });
+      resolve();
+    });
+  }
+
+  addData().then(function () {
+    master.writeMultipleCoils(2000, [true, false], 2).then(function (resp) {
+      console.log("2000 true");
+      turnUpdater = setInterval(noOfTurnUpdate, 1000);
+
+        // master.writeMultipleCoils(2000, [false, false], 2).then(function (resp) {
+        //   console.log("2000 false");
+        //   turnUpdater = setInterval(noOfTurnUpdate, 1000);
+        // }, function (err) { 
+        //   // console.log(err)
+        // });
+    }, function (err) { 
+      // console.log(err)
+    });
+  });
+
+  // master.writeMultipleRegisters(41090, [0, 0, trn, 0, 1]).then(function (resp) {
+    
+  //     var rotVal = fs.readFileSync('C:\\config\\config.txt','utf8').split(",").slice(5, 8).map(Number);
+  //     var const_data = [['green', 'black', 'blue'], rotVal];
+
+  //     var arr = obj.replace(/[{(',')}]/g, '').split(" ");
+
+  //     const n = 3;
+  //     const chunk = (arr, size) => {
+  //       const res = [];
+  //       for(let i = 0; i < arr.length; i++) {
+  //           if(i % size === 0){
+  //             res.push([arr[i]]);
+  //           }
+  //           else{
+  //             res[res.length-1].push(arr[i]);
+  //           };
+  //       };
+  //       return res;
+  //     };
+
+  //     var out = chunk(arr, n);
+
+  //     for (let i = 0; i < out.length; i++) {
+  //       console.log(out[i][1]);
+
+  //       if(out[i][1] == 'green'){
+
+  //         master.writeSingleRegister(A(i, 0), const_data[1][0]).then(function (resp) {
+  //           // console.log(resp);
+  //           console.log(A(i, 0));
+  //           console.log(const_data[1][0]);
+  //         }, function (err) {
+  //           console.log(A(i, 0), " err")
+  //         });
+  //       }
+  //       if(out[i][1] == 'black'){
           
-          master.writeSingleRegister(A(i, 2), const_data[1][2]).then(function (resp) {
-            // console.log(resp);
-            console.log(A(i, 2));
-            console.log(const_data[1][2]);
-          }, function (err) {
-            console.log(A(i, 2), " err")
-          });
-        }
+  //         master.writeSingleRegister(A(i, 1), const_data[1][1]).then(function (resp) {
+  //           // console.log(resp);
+  //           console.log(A(i, 1));
+  //           console.log(const_data[1][1]);
+  //         }, function (err) {
+  //           console.log(A(i, 1), " err")
+  //         });
+  //       }
+  //       if(out[i][1] == 'blue'){
+          
+  //         master.writeSingleRegister(A(i, 2), const_data[1][2]).then(function (resp) {
+  //           // console.log(resp);
+  //           console.log(A(i, 2));
+  //           console.log(const_data[1][2]);
+  //         }, function (err) {
+  //           console.log(A(i, 2), " err")
+  //         });
+  //       }
 
         
-        master.writeSingleRegister(Dis(i), parseInt(out[i][2])).then(function (resp) {
-          // console.log(resp);
-          console.log(parseInt(out[i][2]));
-        }, function (err) {
-          console.log(out[i][2], " err")
-        });
-      }
+  //       master.writeSingleRegister(Dis(i), parseInt(out[i][2])).then(function (resp) {
+  //         // console.log(resp);
+  //         console.log(parseInt(out[i][2]));
+  //       }, function (err) {
+  //         console.log(out[i][2], " err")
+  //       });
+  //     }
 
-      // bed distance tresh hold
-      var beddis = fs.readFileSync('C:\\config\\config.txt','utf8').split(",").slice(8, 9).map(Number);
-      master.writeSingleRegister(Dis(out.length), parseInt(beddis[0])).then(function (resp) {
-        // console.log(resp);
-        console.log(parseInt(beddis[0]));
-      }, function (err) {
-        console.log((out.length+1), " err")
-      });
+  //     // bed distance tresh hold
+  //     var beddis = fs.readFileSync('C:\\config\\config.txt','utf8').split(",").slice(8, 9).map(Number);
+  //     master.writeSingleRegister(Dis(out.length), parseInt(beddis[0])).then(function (resp) {
+  //       // console.log(resp);
+  //       console.log(parseInt(beddis[0]));
+  //     }, function (err) {
+  //       console.log((out.length+1), " err")
+  //     });
 
-      setTimeout(() => {
-        // master.writeMultipleCoils(2000, [true, false], 2).then(function (resp) {
-        //   // console.log(resp)
-        // }, function (err) { 
-        //   console.log(err)
-        // });
+  //     setTimeout(() => {
+  //       // master.writeMultipleCoils(2000, [true, false], 2).then(function (resp) {
+  //       //   // console.log(resp)
+  //       // }, function (err) { 
+  //       //   console.log(err)
+  //       // });
 
-        master.writeMultipleCoils(2000, [true, false], 2).then(function (resp) {
-          console.log("2000 true");
-            master.writeMultipleCoils(2000, [false, false], 2).then(function (resp) {
-              console.log("2000 false");
-              turnUpdater = setInterval(noOfTurnUpdate, 1000);
-            }, function (err) { 
-              // console.log(err)
-            });
-        }, function (err) { 
-          // console.log(err)
-        });
+  //       master.writeMultipleCoils(2000, [true, false], 2).then(function (resp) {
+  //         console.log("2000 true");
+  //           master.writeMultipleCoils(2000, [false, false], 2).then(function (resp) {
+  //             console.log("2000 false");
+  //             turnUpdater = setInterval(noOfTurnUpdate, 1000);
+  //           }, function (err) { 
+  //             // console.log(err)
+  //           });
+  //       }, function (err) { 
+  //         // console.log(err)
+  //       });
 
-        // turnUpdater = setInterval(noOfTurnUpdate, 1000);
+  //       // turnUpdater = setInterval(noOfTurnUpdate, 1000);
 
-      }, 1000);
+  //     }, 1000);
 
-  // console.log(resp);
-  }, function (err) {
-    // console.log(err)
-  });
+  // // console.log(resp);
+  // }, function (err) {
+  //   // console.log(err)
+  // });
 
 });
 
