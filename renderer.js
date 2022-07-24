@@ -1,48 +1,37 @@
 "use strict";
 
-const { app, BrowserWindow, Menu, ipcMain, dialog } = require("electron");
+const { app, BrowserWindow, Menu, ipcMain, dialog, powerMonitor } = require("electron");
 const path = require("path");
 const {SerialPort} = require('serialport');
 const Modbus = require('jsmodbus');
 const matrix = require('matrix-js');
 const val = require('./value');
 const fs = require('fs');
-// const unhandled = require('electron-unhandled');
-// var portErr = null;
-// const { execSync } = require('child_process');
-// var master = null;
-// var serialPort = null;
- 
-// unhandled.logError(Error, {
-//   title: 'Title of the Box'
-// });
-
 const fsx = require('fs-extra');
+global.len = null;
 
 var createFileStructure = function() {
   return new Promise(function(resolve, reject) {
-      fsx.ensureDirSync('c:\\config');
-      fsx.writeFileSync('c:\\config\\config.txt', 'COM2,localhost,rootx,ShaN@19960930,rex,150,150,150,1000', 'utf8');
-      resolve();
+    fsx.ensureDirSync('c:\\config');
+    fsx.writeFileSync('c:\\config\\config.txt', 'COM2,localhost,rootx,ShaN@19960930,rex,150,150,150,1000', 'utf8');
+    resolve();
   });
-  };
+};
   
-  
-  function create(){
+function create(){
   return new Promise(function(resolve, reject) {
-      if(fsx.existsSync("c:\\config\\config.txt")) {
+    if(fsx.existsSync("c:\\config\\config.txt")) {
       console.log('File exist');
-      }
-      else{
+    }
+    else{
       createFileStructure().then(function() {
-          console.log("Creating file structure")
+        console.log("Creating file structure")
       })
       .catch(function(err) {
-          reject("Error: " + err)
+        reject("Error: " + err)
       });
-      }
-  
-      resolve();
+    }
+    resolve();
   });
 }
 
@@ -78,77 +67,70 @@ serialPort.on('error', function(err) {
   }
 });
 
-// serialPort.on('open', function() { 
 const master = new Modbus.client.RTU(serialPort, 1);
-// });
-
-function noOfTurnUpdate() {
-    console.log(master.connectionState);
-    master.readHoldingRegisters(41090, 5)
-    .then(resp => {
-      // console.log(resp);
-      var data = resp.response._body._valuesAsArray.slice(0, 5);
-      // console.log("updater", data[0], data[2], data[4]);  // curTrurns, turns, execute ack,
-      if(mainWindow != null){
-        mainWindow.webContents.send("updater", (data));
-      }
-      // else{
-      //   clearInterval(noOfTurnUpdate);
-      //   const options = {
-      //     type: 'error',
-      //     title: 'Error!',
-      //     message: 'Modbus Connection Error!',
-      //     detail: 'Please restart the application'
-      //   };
-    
-      //   const response = dialog.showMessageBox(null, options);
-      // }
-      // if(data[4] ==  1){
-      //   console.log("complete execution");
-      // }
-    })
-
-    ///////////////// un comment
-    // .catch(err => {
-    //   console.error(err);
-    //   // clearInterval(noOfTurnUpdate);
-    //     const options = {
-    //       type: 'error',
-    //       title: 'Error!',
-    //       buttons: ['Yes', 'No'],
-    //       message: 'Modbus Connection Error!',
-    //       detail: 'Please restart the application'
-    //     };
-  
-    //     const response = dialog.showMessageBoxSync(null, options);
-    //     console.log(response);
-    //     if(response == 0){
-    //       mainWindow.webContents.reloadIgnoringCache();
-    //     }
-    //     if(response == 1){
-    //       app.quit();
-    //     }
-    // });
-}
 
 var turnUpdater = null;
-// clearInterval(turnUpdater);
-// turnUpdater = setInterval(noOfTurnUpdate, 1000);
+function noOfTurnUpdate() {
+  // console.log(master.connectionState);
+  master.readHoldingRegisters(41090, 5)
+  .then(resp => {
+    var data = resp.response._body._valuesAsArray.slice(0, 5);
+    // console.log("updater", data[0], data[2], data[4]);  // curTrurns, turns, execute ack,
+    if(mainWindow != null){
+      mainWindow.webContents.send("updater", (data));
+    }
+    else{
+      clearInterval(noOfTurnUpdate);
+      const options = {
+        type: 'error',
+        title: 'Error!',
+        message: 'Modbus Connection Error!',
+        detail: 'Please restart the application'
+      };
+  
+      const response = dialog.showMessageBox(null, options);
+    }
+  });
+}
+
+var readerManual = null;
+function colisReadManual() {
+  master.readCoils(1004, 1)
+  .then(resp => {
+    // console.log(resp);
+    var data = resp.response._body._valuesAsArray.slice(0, 1);
+    console.log(data[0]);
+    var M1004 = data[0];
+
+    if(M1004 == 1){
+      clearInterval(readerManual);
+      master.writeMultipleCoils(501, [false, false], 2).then(function (resp) {
+        console.log("501 false");
+        turnUpdater = setInterval(noOfTurnUpdate, 1000);
+        if(mainWindow != null && M1004 == 1){
+          mainWindow.webContents.send('reply', "sub11");
+        }
+      }, function (err) { 
+        // console.log(err)
+      });
+    }
+
+  })
+  .catch(err => {
+    console.error(err)
+  })
+}
 
 const A = matrix(val.mat);
 const Dis = matrix(val.dis);
 
-// var color_data = [['green', 'black', 'black', 'blue', 'black', 'black', 'green'], [100, 200, 300, 300, 200, 100, 0]];
-
-// Keep a global reference of the mainWindowdow object, if you don't, the mainWindowdow will
-// be closed automatically when the JavaScript object is garbage collected.
 let mainWindow = null;
 let loginWindow = null;
 let subpy = null;
 
-const PY_DIST_FOLDER = "dist-python"; // python distributable folder
-const PY_SRC_FOLDER = "web_app"; // path to the python source
-const PY_MODULE = "run_app.py"; // the name of the main module
+const PY_DIST_FOLDER = "dist-python";
+const PY_SRC_FOLDER = "web_app";
+const PY_MODULE = "run_app.py";
 
 const isRunningInBundle = () => {
   return require("fs").existsSync(path.join(__dirname, PY_DIST_FOLDER));
@@ -204,36 +186,6 @@ const killPythonSubprocesses = (main_pid) => {
   });
 };
 
-// const createMainWindow = () => {
-//   // Create the browser mainWindow
-//   mainWindow = new BrowserWindow({
-//     width: 800,
-//     height: 600,
-//     // transparent: true, // transparent header bar
-//     icon: __dirname + "/icon.png",
-//     // fullscreen: true,
-//     // opacity:0.8,
-//     // darkTheme: true,
-//     // frame: false,
-//     resizeable: true,
-//   });
-
-//   // Load the index page
-//   mainWindow.loadURL("http://localhost:4040/");
-
-//   // Open the DevTools.
-//   //mainWindow.webContents.openDevTools();
-
-//   // Emitted when the mainWindow is closed.
-//   mainWindow.on("closed", function () {
-//     // Dereference the mainWindow object
-//     mainWindow = null;
-//   });
-// };
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 const createLoginWindow = () => {
   loginWindow = new BrowserWindow({
       width: 1200,
@@ -263,18 +215,18 @@ const createLoginWindow = () => {
 
 const createMainWindow = () => {
   mainWindow = new BrowserWindow({
-      width: 1200,
-      height: 720,
-      minWidth: 1200,
-      minHeight: 720,
-      icon: __dirname+'/icon.png',
-      webPreferences: {
-        nodeIntegration: true,
-        contextIsolation: false,
-      }
-      // autoHideMenuBar: true,
-      // useContentSize: true,
-      // resizable: false,
+    width: 1200,
+    height: 720,
+    minWidth: 1200,
+    minHeight: 720,
+    icon: __dirname+'/icon.png',
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+    }
+    // autoHideMenuBar: true,
+    // useContentSize: true,
+    // resizable: false,
   });
 
   mainWindow.webContents.openDevTools();
@@ -297,53 +249,11 @@ ipcMain.handle('test', (event, obj) => {
   console.log(obj);
 });
 
-// function validatelogin(obj) {
-//   const { username, password} = obj;
-//   if(username == "user1"){
-//     createMainWindow();
-//     mainWindow.show();
-//     loginWindow.close();
-//     let supv = Menu.buildFromTemplate(supv_menu);
-//     Menu.setApplicationMenu(supv);
-//   }
-// }
-
-
 function validatelogin(obj) {
   console.log(obj);
   const { username, password, role, login } = obj;
 
-  // createWindow ();
-  // win.show();
-  // winlogin.close();
-  // let supv = Menu.buildFromTemplate(supv_menu);
-  // Menu.setApplicationMenu(supv);
-
-  // const serialPort = new SerialPort({
-  //   path: fs.readFileSync('C:\\config\\config.txt','utf8').split(",")[0],
-  //   baudRate:19200,
-  //   dataBits: 8,
-  //   parity: "even",
-  //   stopBits: 1,
-  //   flowControl: false
-  // }, false);
-
-  // master = new Modbus.client.RTU(serialPort, 1);
-
-  if(login == true){
-    // serialPort = new SerialPort({
-    //   path: fs.readFileSync('C:\\config\\config.txt','utf8').split(",")[0],
-    //   baudRate:19200,
-    //   dataBits: 8,
-    //   parity: "even",
-    //   stopBits: 1,
-    //   flowControl: false
-    // }, false);
-
-    // master = new Modbus.client.RTU(serialPort, 1);
-
-    
-    
+  if(login == true){    
     turnUpdater = setInterval(noOfTurnUpdate, 1000);
     if(role == "admin"){
       createMainWindow();
@@ -373,19 +283,8 @@ function validatelogin(obj) {
       let qa = Menu.buildFromTemplate(qa_menu);
       Menu.setApplicationMenu(qa);
     }
-
-    // if(portErr == true){
-    //   console.log("err");
-    //   mainWindow.webContents.send('PortError', "error");
-    // }
-    // else{
-    //   console.log("none");
-    //   mainWindow.webContents.send('PortError', "none");
-    // }
   }
   else if(login == false){
-    // master = null;
-    // serialPort = null;
     clearInterval(turnUpdater);
     const options = {
       type: 'error',
@@ -396,7 +295,6 @@ function validatelogin(obj) {
 
     const response = dialog.showMessageBox(null, options);
   }
-
 }
 
 const supv_menu = [
@@ -429,25 +327,6 @@ const supv_menu = [
       }
     ]
   },
-
-  // {
-  //   label: 'Report',
-  //   submenu: [
-  //     {
-  //       label: 'Generate',
-  //       click: function(){
-  //         mainWindow.webContents.send('reply', "sub31");
-  //       }
-  //     },
-  //     {
-  //       label: 'QA Updated History',
-  //       click: function(){
-  //         mainWindow.webContents.send('reply', "sub32");
-  //       }
-  //     },
-  //   ]
-  // },
-
   {
     label: 'Project',
     submenu: [
@@ -465,34 +344,9 @@ const supv_menu = [
       },
     ]
   },
-
-  // {
-  //   label: 'Report',
-  //   submenu: [
-  //     {
-  //       label: 'Generate',
-  //       click: function(){
-  //         mainWindow.webContents.send('reply', "sub31");
-  //       }
-  //     },
-  //     {
-  //       label: 'QA Updated History',
-  //       click: function(){
-  //         mainWindow.webContents.send('reply', "sub32");
-  //       }
-  //     },
-  //   ]
-  // },
-
   {
     label: 'Tools',
     submenu: [
-      // {
-      //   label: 'Other Operations',
-      //   click: function(){
-      //     mainWindow.webContents.send('reply', "sub41");
-      //   }
-      // },
       {
         label: 'Operate Machine',
         click: function(){
@@ -579,12 +433,6 @@ const opr_menu = [
   {
       label: 'Tools',
       submenu: [
-        // {
-        //   label: 'Other Operations',
-        //   click: function(){
-        //     win.webContents.send('reply', "sub41");
-        //   }
-        // },
         {
           label: 'Operate Machine',
           click: function(){
@@ -698,137 +546,105 @@ ipcMain.handle('flash', (event, obj) => {
   const response = dialog.showMessageBox(null, options);
 });
 
-// Start Auto mode Programme
-// ipcMain.on('startPro', function () {
-//   console.log("startPro");
-//   for (let i = 0; i < color_data[0].length; i++) {
-//     console.log(color_data[0][i]);
-//     if(color_data[0][i] == 'green'){ // HD500 
-//       console.log(A(i, 0));
-//       console.log(const_data[1][0]);
-//       // master.writeSingleRegister(A(i, 0), const_data[1][0]);
-
-//       master.writeSingleRegister(A(i, 0), const_data[1][0]).then(function (resp) {
-//         // console.log(resp);
-//       }, function (err) {
-//         console.log(err)
-//       });
-//     }
-//     if(color_data[0][i] == 'blue'){ // HD700
-//       console.log(A(i, 2));
-//       console.log(const_data[1][1]);
-//       // master.writeSingleRegister(A(i, 1), const_data[1][1]);
-
-//       master.writeSingleRegister(A(i, 1), const_data[1][1]).then(function (resp) {
-//         // console.log(resp);
-//       }, function (err) {
-//         console.log(err)
-//       });
-//     }
-//     if(color_data[0][i] == 'black'){ // HD900
-//       console.log(A(i, 1));
-//       console.log(const_data[1][2]);
-//       // master.writeSingleRegister(A(i, 2), const_data[1][2]);
-
-//       master.writeSingleRegister(A(i, 2), const_data[1][2]).then(function (resp) {
-//         // console.log(resp);
-//       }, function (err) {
-//         console.log(err)
-//       });
-//     }
-    
-//     console.log(color_data[1][i]);
-//     // master.writeSingleRegister(Dis(i), color_data[1][i]);
-
-//     master.writeSingleRegister(Dis(i), color_data[1][i]).then(function (resp) {
-//       // console.log(resp);
-//     }, function (err) {
-//       console.log(err)
-//     });
-//   };
-
-//   setTimeout(() => {
-//     master.writeSingleCoil(2000, true).then(function (resp) {
-//       // console.log(resp)
-//     }, function (err) { 
-//       // console.log(err)
-//     });
-
-//   }, 2000);
-
-// });
-
-/////////////////////////////////////////////////////////////////////////////////////
-
-// function exechecker() {
-//   master.readInputRegisters(41004, 1)
-//   .then(resp => {
-//     // console.log(resp);
-//     var data = resp.response._body._valuesAsArray.slice(0, 1);
-//     // console.log("turnUpdater",data[0]);
-//     mainWindow.webContents.send("exechecker", data[0])
-//   })
-//   .catch(err => {
-//     console.error(err)
-//   })
-// }
-
-// setInterval(exechecker, 30);
-
-/////////////////////////////////////////////////////////////////////////////////////
-
 function clearData(){
   clearInterval(turnUpdater);
 
   master.writeMultipleRegisters(41090, [0, 0, 0, 0, 0]).then(function (resp) {
 
-      // master.writeSingleCoil(2000, false).then(function (resp) {
-      //   // console.log(resp)
-      // }, function (err) { 
-      //   console.log(err)
-      // });
-      
-      for (let i = 0; i < 100; i++) {
+      var rstData = function() {
+        return new Promise(function(resolve, reject) {
+          for (let i = 0; i < global.len; i++) {
 
-        master.writeSingleRegister(A(i, 0), 0).then(function (resp) {
-          // console.log(resp);
-        }, function (err) {
-          // console.log(err)
+            master.writeSingleRegister(A(i, 0), 0).then(function (resp) {
+              // console.log(resp);
+            }, function (err) {
+              // console.log(err)
+            });
+    
+            master.writeSingleRegister(A(i, 1), 0).then(function (resp) {
+              // console.log(resp);
+            }, function (err) {
+              // console.log(err)
+            });
+    
+            master.writeSingleRegister(A(i, 2), 0).then(function (resp) {
+              // console.log(resp);
+            }, function (err) {
+              // console.log(err)
+            });
+    
+            master.writeSingleRegister(Dis(i), 0).then(function (resp) {
+              // console.log(resp);
+            }, function (err) {
+              // console.log(err)
+            });
+    
+          };
+          resolve();
         });
+      };
 
-        master.writeSingleRegister(A(i, 1), 0).then(function (resp) {
-          // console.log(resp);
-        }, function (err) {
-          // console.log(err)
+      var modal = function() {
+        return new Promise(function(resolve, reject){
+          dialog.showMessageBox(
+            new BrowserWindow({
+              parent: mainWindow,
+              show: false,
+              alwaysOnTop: true
+            }),
+            {
+              type: 'warning',
+              buttons: ['Yes'],
+              defaultId: 0,
+              cancelId: 1,
+              title: 'Alert!',
+              message: 'Activate the Home Mode',
+              detail: 'Before doing another functions you have to activate the Home Mode'
+            }
+          ).then(()=>{
+            resolve();
+          });
         });
-
-        master.writeSingleRegister(A(i, 2), 0).then(function (resp) {
-          // console.log(resp);
-        }, function (err) {
-          // console.log(err)
-        });
-
-        master.writeSingleRegister(Dis(i), 0).then(function (resp) {
-          // console.log(resp);
-        }, function (err) {
-          // console.log(err)
-        });
-
       }
 
-      master.writeSingleCoil(102, true).then(function (resp) {
-        console.log("M102 True")
-        master.writeSingleCoil(102, false).then(function (resp) {
-          console.log("M102 False")
-          console.log("Done");
-          turnUpdater = setInterval(noOfTurnUpdate, 1000);
-          mainWindow.webContents.send('reply', "sub11");
-        }, function (err) { 
-          // console.log(err)
+      var M400 = function() {
+        return new Promise(function(resolve, reject) {
+          master.writeMultipleCoils(400, [true]).then(function (resp) {
+            console.log("M400 Triger");
+            rstData().then(function(){
+              console.log("noOfTurnUpdate begin");
+              mainWindow.webContents.send('reply', "sub11");
+              resolve()
+            });
+          }, function (err) { 
+            console.log(err)
+          });
         });
-      }, function (err) { 
-        // console.log(err)
+      };
+
+      
+      M400().then(()=>{
+        modal().then(()=>{
+          console.log("Stopped!");
+          
+          master.writeMultipleCoils(501, [true, true], 2).then(function (resp) {
+            console.log("501 502 true");
+            setTimeout(() => {
+              master.writeMultipleCoils(502, [false, false], 2).then(function (resp) { // M400
+                console.log("502 false");
+                readerManual = setInterval(colisReadManual, 1000);
+                turnUpdater = setInterval(noOfTurnUpdate, 1000);
+              }, function (err) { 
+                // console.log(err)
+              });
+            }, 500);
+          }, function (err) { 
+            // console.log(err)
+          });
+
+        });
       });
+      
 
   }, function (err) {
     console.log(err)
@@ -866,6 +682,7 @@ ipcMain.handle('startPro', (event, obj) => {
         };
 
         var out = chunk(arr, n);
+        global.len = out.length;
 
         for (let i = 0; i < out.length; i++) {
           console.log(out[i][1]);
@@ -927,121 +744,10 @@ ipcMain.handle('startPro', (event, obj) => {
     master.writeMultipleCoils(2000, [true, false], 2).then(function (resp) {
       console.log("2000 true");
       turnUpdater = setInterval(noOfTurnUpdate, 1000);
-
-        // master.writeMultipleCoils(2000, [false, false], 2).then(function (resp) {
-        //   console.log("2000 false");
-        //   turnUpdater = setInterval(noOfTurnUpdate, 1000);
-        // }, function (err) { 
-        //   // console.log(err)
-        // });
     }, function (err) { 
       // console.log(err)
     });
   });
-
-  // master.writeMultipleRegisters(41090, [0, 0, trn, 0, 1]).then(function (resp) {
-    
-  //     var rotVal = fs.readFileSync('C:\\config\\config.txt','utf8').split(",").slice(5, 8).map(Number);
-  //     var const_data = [['green', 'black', 'blue'], rotVal];
-
-  //     var arr = obj.replace(/[{(',')}]/g, '').split(" ");
-
-  //     const n = 3;
-  //     const chunk = (arr, size) => {
-  //       const res = [];
-  //       for(let i = 0; i < arr.length; i++) {
-  //           if(i % size === 0){
-  //             res.push([arr[i]]);
-  //           }
-  //           else{
-  //             res[res.length-1].push(arr[i]);
-  //           };
-  //       };
-  //       return res;
-  //     };
-
-  //     var out = chunk(arr, n);
-
-  //     for (let i = 0; i < out.length; i++) {
-  //       console.log(out[i][1]);
-
-  //       if(out[i][1] == 'green'){
-
-  //         master.writeSingleRegister(A(i, 0), const_data[1][0]).then(function (resp) {
-  //           // console.log(resp);
-  //           console.log(A(i, 0));
-  //           console.log(const_data[1][0]);
-  //         }, function (err) {
-  //           console.log(A(i, 0), " err")
-  //         });
-  //       }
-  //       if(out[i][1] == 'black'){
-          
-  //         master.writeSingleRegister(A(i, 1), const_data[1][1]).then(function (resp) {
-  //           // console.log(resp);
-  //           console.log(A(i, 1));
-  //           console.log(const_data[1][1]);
-  //         }, function (err) {
-  //           console.log(A(i, 1), " err")
-  //         });
-  //       }
-  //       if(out[i][1] == 'blue'){
-          
-  //         master.writeSingleRegister(A(i, 2), const_data[1][2]).then(function (resp) {
-  //           // console.log(resp);
-  //           console.log(A(i, 2));
-  //           console.log(const_data[1][2]);
-  //         }, function (err) {
-  //           console.log(A(i, 2), " err")
-  //         });
-  //       }
-
-        
-  //       master.writeSingleRegister(Dis(i), parseInt(out[i][2])).then(function (resp) {
-  //         // console.log(resp);
-  //         console.log(parseInt(out[i][2]));
-  //       }, function (err) {
-  //         console.log(out[i][2], " err")
-  //       });
-  //     }
-
-  //     // bed distance tresh hold
-  //     var beddis = fs.readFileSync('C:\\config\\config.txt','utf8').split(",").slice(8, 9).map(Number);
-  //     master.writeSingleRegister(Dis(out.length), parseInt(beddis[0])).then(function (resp) {
-  //       // console.log(resp);
-  //       console.log(parseInt(beddis[0]));
-  //     }, function (err) {
-  //       console.log((out.length+1), " err")
-  //     });
-
-  //     setTimeout(() => {
-  //       // master.writeMultipleCoils(2000, [true, false], 2).then(function (resp) {
-  //       //   // console.log(resp)
-  //       // }, function (err) { 
-  //       //   console.log(err)
-  //       // });
-
-  //       master.writeMultipleCoils(2000, [true, false], 2).then(function (resp) {
-  //         console.log("2000 true");
-  //           master.writeMultipleCoils(2000, [false, false], 2).then(function (resp) {
-  //             console.log("2000 false");
-  //             turnUpdater = setInterval(noOfTurnUpdate, 1000);
-  //           }, function (err) { 
-  //             // console.log(err)
-  //           });
-  //       }, function (err) { 
-  //         // console.log(err)
-  //       });
-
-  //       // turnUpdater = setInterval(noOfTurnUpdate, 1000);
-
-  //     }, 1000);
-
-  // // console.log(resp);
-  // }, function (err) {
-  //   // console.log(err)
-  // });
-
 });
 
 // Pause Auto mode Programme
@@ -1068,7 +774,6 @@ ipcMain.on('pauseRun', function () {
 ipcMain.on('stopRun', function () {
   console.log("stopRun");
   // mainWindow.setMenuBarVisibility(true);
-
   master.writeMultipleCoils(400, [true]).then(function (resp) {
     console.log("M400 True")
     master.writeMultipleCoils(400, [false]).then(function (resp) {
@@ -1179,7 +884,7 @@ function colisRead() {
 }
 
 // Act Home
-ipcMain.on('actHome', function () {
+var actHome = ipcMain.on('actHome', function () {
   console.log("actHome");
   // M1004 home done
   clearInterval(turnUpdater);
@@ -1429,35 +1134,7 @@ ipcMain.on('stopInkRoll', function () {
   });
 });
 
-///////////////////////////////////////////////////////////////////
-
-var readerManual = null;
-function colisReadManual() {
-  master.readCoils(1004, 1)
-  .then(resp => {
-    // console.log(resp);
-    var data = resp.response._body._valuesAsArray.slice(0, 1);
-    console.log(data[0]);
-    var M1004 = data[0];
-
-    if(M1004 == 1){
-      clearInterval(readerManual);
-      master.writeMultipleCoils(501, [false, false], 2).then(function (resp) {
-        console.log("501 false");
-        turnUpdater = setInterval(noOfTurnUpdate, 1000);
-        if(mainWindow != null && M1004 == 1){
-          mainWindow.webContents.send('reply', "sub11");
-        }
-      }, function (err) { 
-        // console.log(err)
-      });
-    }
-
-  })
-  .catch(err => {
-    console.error(err)
-  })
-}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ipcMain.on('btnactHomeManual', function () {
   console.log("btnactHomeManual");
@@ -1489,30 +1166,7 @@ ipcMain.handle('showmodal', (event, obj) => {
   const response = dialog.showMessageBox(null, options);
 });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -1523,7 +1177,6 @@ app.on("ready", function () {
   // createMainWindow();
   createLoginWindow();
 });
-
 
 // disable menu
 app.on("browser-window-created", function (e, window) {
@@ -1559,7 +1212,6 @@ const find = require('find-process');
 
 app.on("quit", function (event) {
   // do some additional cleanup
-
   ipcMain.removeAllListeners();
   let main_process_pid = process.pid;
   // process.kill(main_process_pid, 'ready');
@@ -1606,42 +1258,15 @@ app.on("quit", function (event) {
     }
   });
 
-  // find('name', 'Runtime Broker', true)
-  // .then(function (list) {
-  //   if(list.length != 0){
-      exec(`taskkill /f /im RuntimeBroker.exe /t`, (err, stdout, stderr) =>{
-        if(err){
-          throw err
-        }
-        console.log('stdout', stdout);
-        console.log('err', err);
-      });
-  //   }
-  // });
+  exec(`taskkill /f /im RuntimeBroker.exe /t`, (err, stdout, stderr) =>{
+    if(err){
+      throw err
+    }
+    console.log('stdout', stdout);
+    console.log('err', err);
+  });
 
   mainWindow = null;
   loginWindow = null;
 
 });
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////
-
-// unhandled({
-//   logger: (err) => {
-//     console.error();
-//     console.log(err.message);
-//     if (err.name == "Error") {
-//       portErr = true;
-//     }
-//     else{
-//       portErr = false;
-//     }
-//   },
-//   showDialog: true,
-//   // reportButton: (error) => {
-//   //     console.log('Report Button Initialized');
-//   // },
-
-// });
