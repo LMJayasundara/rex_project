@@ -595,8 +595,7 @@ ipcMain.on('actAuto', function () {
       detail: (err.message).toUpperCase()
     };
       const response = dialog.showMessageBox(null, options);
-    });
-
+  });
 });
 
 ipcMain.handle('logout', (event, obj) => {
@@ -694,7 +693,6 @@ function clearData(){
         });
       };
 
-      
       M400().then(()=>{
         modal().then(()=>{
           console.log("Stopped!");
@@ -716,8 +714,7 @@ function clearData(){
 
         });
       });
-      
-
+    
   }, function (err) {
     console.log(err)
   });
@@ -729,6 +726,39 @@ ipcMain.handle('startPro', (event, obj) => {
 
   var { obj, trn } = obj;
   clearInterval(turnUpdater);
+
+  var rstData = function() {
+    return new Promise(function(resolve, reject) {
+      for (let i = 0; i < global.len; i++) {
+
+        master.writeSingleRegister(A(i, 0), 0).then(function (resp) {
+          // console.log(resp);
+        }, function (err) {
+          // console.log(err)
+        });
+
+        master.writeSingleRegister(A(i, 1), 0).then(function (resp) {
+          // console.log(resp);
+        }, function (err) {
+          // console.log(err)
+        });
+
+        master.writeSingleRegister(A(i, 2), 0).then(function (resp) {
+          // console.log(resp);
+        }, function (err) {
+          // console.log(err)
+        });
+
+        master.writeSingleRegister(Dis(i), 0).then(function (resp) {
+          // console.log(resp);
+        }, function (err) {
+          // console.log(err)
+        });
+
+      };
+      resolve();
+    });
+  };
 
   var addData = function() {
     return new Promise(function(resolve, reject) {
@@ -812,14 +842,17 @@ ipcMain.handle('startPro', (event, obj) => {
     });
   }
 
-  addData().then(function () {
-    master.writeMultipleCoils(2000, [true, false], 2).then(function (resp) {
-      console.log("2000 true");
-      turnUpdater = setInterval(noOfTurnUpdate, 1000);
-    }, function (err) { 
-      // console.log(err)
+  rstData().then(()=>{
+    addData().then(function () {
+      master.writeMultipleCoils(2000, [true, false], 2).then(function (resp) {
+        console.log("2000 true");
+        turnUpdater = setInterval(noOfTurnUpdate, 1000);
+      }, function (err) { 
+        // console.log(err)
+      });
     });
   });
+  
 });
 
 // Pause Auto mode Programme
@@ -1158,7 +1191,6 @@ ipcMain.on('resetdragBaraidIn', function () {
   console.log("resetdragBaraidIn");
   master.writeSingleCoil(32, false);
 });
-
 
 // Dragging Roll
 ipcMain.on('releaseDraggingRoll', function () {
