@@ -72,54 +72,126 @@ const master = new Modbus.client.RTU(serialPort, 1);
 var turnUpdater = null;
 function noOfTurnUpdate() {
   // console.log(master.connectionState);
-  master.readHoldingRegisters(41090, 5)
-  .then(resp => {
-    var data = resp.response._body._valuesAsArray.slice(0, 5);
-    // console.log("updater", data[0], data[2], data[4]);  // curTrurns, turns, execute ack,
-    if(mainWindow != null){
-      mainWindow.webContents.send("updater", (data));
-    }
-    else{
-      clearInterval(noOfTurnUpdate);
-      const options = {
-        type: 'error',
-        title: 'Error!',
-        message: 'Modbus Connection Error!',
-        detail: 'Please restart the application'
-      };
-  
-      const response = dialog.showMessageBox(null, options);
-    }
-  });
-}
 
-var readerManual = null;
-function colisReadManual() {
-  master.readCoils(1004, 1)
-  .then(resp => {
-    // console.log(resp);
-    var data = resp.response._body._valuesAsArray.slice(0, 1);
-    console.log(data[0]);
-    var M1004 = data[0];
-
-    if(M1004 == 1){
-      clearInterval(readerManual);
-      master.writeMultipleCoils(501, [false, false], 2).then(function (resp) {
-        console.log("501 false");
-        turnUpdater = setInterval(noOfTurnUpdate, 1000);
-        if(mainWindow != null && M1004 == 1){
-          mainWindow.webContents.send('reply', "sub11");
+  var func1 = function() {
+    return new Promise(function(resolve, reject){
+      master.readHoldingRegisters(41090, 5)
+      .then(resp => {
+        var data = resp.response._body._valuesAsArray.slice(0, 5);
+        // console.log("updater", data[0], data[2], data[4]);  // curTrurns, turns, execute ack,
+        if(mainWindow != null){
+          mainWindow.webContents.send("updater", (data));
         }
-      }, function (err) { 
-        // console.log(err)
+        else{
+          // clearInterval(noOfTurnUpdate);
+          const options = {
+            type: 'error',
+            title: 'Error!',
+            message: 'Modbus Connection Error!',
+            detail: 'Please restart the application'
+          };
+      
+          const response = dialog.showMessageBox(null, options);
+        }
       });
-    }
+      resolve();
+    });
+  };
 
+  var func2 = function() {
+    return new Promise(function(resolve, reject){
+      master.readCoils(402, 1)
+        .then(resp => {
+          var data = resp.response._body._valuesAsArray.slice(0, 1);
+          if(data[0] == 1){
+            master.writeMultipleCoils(501, [true, true], 2).then(function (resp) {
+              console.log("501 502 true");
+              master.writeMultipleCoils(402, [false, false], 2);
+              // setTimeout(() => {
+                master.writeMultipleCoils(502, [false, false], 2).then(function (resp) { // M400
+                  console.log("502 false");
+                  // readerManual = setInterval(colisReadManual, 1000);
+                  // turnUpdater = setInterval(noOfTurnUpdate, 1000);
+                  resolve();
+                }, function (err) { 
+                  // console.log(err)
+                });
+              // }, 500);
+            }, function (err) { 
+              // console.log(err)
+            });
+          }
+          // else{
+          //   clearInterval(noOfTurnUpdate);
+          // }
+        })
+    });
+  };
+
+  function func3() {
+    return new Promise(function(resolve, reject){
+      master.readCoils(1004, 1)
+      .then(resp => {
+        // console.log(resp);
+        var data = resp.response._body._valuesAsArray.slice(0, 1);
+        var M1004 = data[0];
+    
+        if(M1004 == 1){
+          // clearInterval(readerManual);
+          master.writeMultipleCoils(501, [false, false], 2).then(function (resp) {
+            console.log("501 false");
+            // turnUpdater = setInterval(noOfTurnUpdate, 1000);
+            if(mainWindow != null && M1004 == 1){
+              mainWindow.webContents.send('reply', "sub11");
+              resolve();
+            }
+          }, function (err) { 
+            // console.log(err)
+          });
+        }
+    
+      })
+      .catch(err => {
+        console.error(err)
+      })
+    });
+  };
+
+  func1().then(()=>{
+    func2().then(()=>{
+      func3();
+    })
   })
-  .catch(err => {
-    console.error(err)
-  })
+
+
 }
+
+// var readerManual = null;
+// function colisReadManual() {
+//   master.readCoils(1004, 1)
+//   .then(resp => {
+//     // console.log(resp);
+//     var data = resp.response._body._valuesAsArray.slice(0, 1);
+//     var M1004 = data[0];
+
+//     if(M1004 == 1){
+//       clearInterval(readerManual);
+//       master.writeMultipleCoils(501, [false, false], 2).then(function (resp) {
+//         console.log("501 false");
+//         turnUpdater = setInterval(noOfTurnUpdate, 1000);
+//         if(mainWindow != null && M1004 == 1){
+//           mainWindow.webContents.send('reply', "sub11");
+//         }
+//       }, function (err) { 
+//         // console.log(err)
+//       });
+//     }
+
+//   })
+//   .catch(err => {
+//     console.error(err)
+//   })
+// }
 
 const A = matrix(val.mat);
 const Dis = matrix(val.dis);
@@ -632,7 +704,7 @@ function clearData(){
             setTimeout(() => {
               master.writeMultipleCoils(502, [false, false], 2).then(function (resp) { // M400
                 console.log("502 false");
-                readerManual = setInterval(colisReadManual, 1000);
+                // readerManual = setInterval(colisReadManual, 1000);
                 turnUpdater = setInterval(noOfTurnUpdate, 1000);
               }, function (err) { 
                 // console.log(err)
@@ -1144,7 +1216,7 @@ ipcMain.on('btnactHomeManual', function () {
     setTimeout(() => {
       master.writeMultipleCoils(502, [false, false], 2).then(function (resp) { // M400
         console.log("502 false");
-        readerManual = setInterval(colisReadManual, 1000);
+        // readerManual = setInterval(colisReadManual, 1000);
       }, function (err) { 
         // console.log(err)
       });
