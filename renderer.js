@@ -121,10 +121,10 @@ function noOfTurnUpdate() {
               // console.log(err)
             });
           }
-          // else{
-          //   clearInterval(noOfTurnUpdate);
-          // }
-        })
+          else{
+            resolve();
+          }
+        });
     });
   };
 
@@ -149,6 +149,9 @@ function noOfTurnUpdate() {
             // console.log(err)
           });
         }
+        else{
+          resolve();
+        }
     
       })
       .catch(err => {
@@ -158,9 +161,14 @@ function noOfTurnUpdate() {
   };
 
   func1().then(()=>{
-    func2().then(()=>{
-      func3();
-    })
+    setTimeout(() => {
+      func2().then(()=>{
+        setTimeout(() => {
+          func3();
+        }, 100);  
+      })
+    }, 100);
+    
   })
 
 
@@ -547,7 +555,7 @@ ipcMain.on('actAuto', function () {
   .then(resp => {
     // console.log(resp);
     var data = resp.response._body._valuesAsArray.slice(0, 1);
-    console.log(data[0]);
+    // console.log(data[0]);
     var M501 = data[0];
 
     if(M501 == 1){
