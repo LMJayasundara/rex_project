@@ -257,33 +257,86 @@ def create_app(config_object_name) -> Flask:
                         cursor.close()
 
                         cursor = mysql.connection.cursor()
-                        for i in range(marksLabel):
-                            index = i+1
-                            gap = gap + kk
+                        # for i in range(marksLabel):
+                        #     index = i+1
+                        #     gap = gap + kk
 
-                            if(index == 1):
-                                sql = "INSERT INTO tmpjig (ind, clr, gap) VALUES ( %s, %s, %s)"
-                                val = (index, "green", 0)
-                                cursor.execute(sql, val)
-                                mysql.connection.commit()
+                        #     if(index == 1):
+                        #         sql = "INSERT INTO tmpjig (ind, clr, gap) VALUES ( %s, %s, %s)"
+                        #         val = (index, "green", 0)
+                        #         cursor.execute(sql, val)
+                        #         mysql.connection.commit()
 
-                            elif(index == marksLabel):
-                                sql = "INSERT INTO tmpjig (ind, clr, gap) VALUES ( %s, %s, %s)"
-                                val = (index, "green", lengthLabel1)
-                                cursor.execute(sql, val)
-                                mysql.connection.commit()
+                        #     elif(index == marksLabel):
+                        #         sql = "INSERT INTO tmpjig (ind, clr, gap) VALUES ( %s, %s, %s)"
+                        #         val = (index, "green", lengthLabel1)
+                        #         cursor.execute(sql, val)
+                        #         mysql.connection.commit()
 
-                            elif(gap == middleLabel):
-                                sql = "INSERT INTO tmpjig (ind, clr, gap) VALUES ( %s, %s, %s)"
-                                val = (index, "blue", gap)
-                                cursor.execute(sql, val)
-                                mysql.connection.commit()
+                        #     elif(gap == middleLabel):
+                        #         sql = "INSERT INTO tmpjig (ind, clr, gap) VALUES ( %s, %s, %s)"
+                        #         val = (index, "blue", gap)
+                        #         cursor.execute(sql, val)
+                        #         mysql.connection.commit()
 
+                        #     else:
+                        #         sql = "INSERT INTO tmpjig (ind, clr, gap) VALUES ( %s, %s, %s)"
+                        #         val = (index, "black", gap)
+                        #         cursor.execute(sql, val)
+                        #         mysql.connection.commit()
+
+
+                        list1 = []
+                        def middle_out(a):
+                            while a:
+                                yield a.pop(len(a) // 2)
+                                
+                        indexlist = list(range(1, marksLabel+1))
+                        marks = ([*middle_out(indexlist)])
+
+                        for count, value in enumerate(marks):
+                            if(count == 0):
+                                list1.append([value, "blue"])
+                            elif(count == len(marks)-1):
+                                list1.append([value, "green"])
+                            elif(count == len(marks)-2):
+                                list1.append([value, "green"])
                             else:
-                                sql = "INSERT INTO tmpjig (ind, clr, gap) VALUES ( %s, %s, %s)"
-                                val = (index, "black", gap)
-                                cursor.execute(sql, val)
-                                mysql.connection.commit()
+                                list1.append([value, "black"])
+
+                        def f(start, end, gap, bins):
+                            arr = [None] * bins
+                            mid_index = len(arr)//2
+                            arr[0] = start
+                            arr[bins-1] = end
+                            arr[mid_index] = end//2
+
+                            for index, val in enumerate(arr):
+                                if (index < mid_index and val == None):
+                                    for mul, i in enumerate(range(index, 0, -1)):
+                                        if end//2 - (gap * (mul+1)) > 0:
+                                            arr[i] = end//2 - (gap * (mul+1))
+                                        else:
+                                            arr[i] = 0
+
+                                elif (index > mid_index and val == None):
+                                    for mul, i in enumerate(range(index, len(arr)-1, 1)):
+                                        if end//2 + (gap * (mul+1)) < end:
+                                            arr[i] = end//2 - (gap * (mul+1))
+                                        else:
+                                            arr[i] = end
+                            return arr
+
+                        list2 = [*middle_out(f(start=0, end=lengthLabel1, gap=kk, bins=marksLabel))]
+                        ziplist = list(zip(list1, list2))
+
+                        for ele in sorted(ziplist, key=lambda x: x[0]):
+                            print(ele[0][0], ele[0][1], ele[1])
+                            sql = "INSERT INTO tmpjig (ind, clr, gap) VALUES ( %s, %s, %s)"
+                            val = (ele[0][0], ele[0][1], ele[1])
+                            cursor.execute(sql, val)
+                            mysql.connection.commit()
+
                         cursor.close()
 
                         cursor = mysql.connection.cursor()
