@@ -45,9 +45,12 @@
 
 ############################################
 
-marksLabel = 11
-lengthLabel1 = 100
-kk = 15
+marksLabel = 7
+lengthLabel1 = 60
+kk = 10
+
+Green2Black = 1
+Black2Blue = 2
 
 list1 = []
 def middle_out(a):
@@ -85,7 +88,7 @@ def f(start, end, gap, bins):
         elif (index > mid_index and val == None):
             for mul, i in enumerate(range(index, len(arr)-1, 1)):
                 if end//2 + (gap * (mul+1)) < end:
-                    arr[i] = end//2 - (gap * (mul+1))
+                    arr[i] = end//2 + (gap * (mul+1))
                 else:
                     arr[i] = end
     return arr
@@ -93,5 +96,25 @@ def f(start, end, gap, bins):
 list2 = [*middle_out(f(start=0, end=lengthLabel1, gap=kk, bins=marksLabel))]
 ziplist = list(zip(list1, list2))
 
-for ele in sorted(ziplist, key=lambda x: x[0]):
-    print(ele[0][0], ele[0][1], ele[1])
+list3 = sorted(ziplist, key=lambda x: x[0])
+offsets = [([0, 'None'], 0)] + list3[:-1], list3
+
+for ele in list(zip(*offsets)):
+    if(ele[0][0][1] == 'None' and ele[1][0][1] == 'green'):
+        print(ele[0][0][1], ele[1][0][1], ele[1][0][0], ele[1][0][1], ele[1][1])
+    elif(ele[0][0][1] == 'green' and ele[1][0][1] == 'black'):
+        print(ele[0][0][1], ele[1][0][1], ele[1][0][0], ele[1][0][1], ele[1][1]+Green2Black)
+    elif(ele[0][0][1] == 'green' and ele[1][0][1] == 'blue'):
+        print(ele[0][0][1], ele[1][0][1], ele[1][0][0], ele[1][0][1], ele[1][1]+(Green2Black+Black2Blue))
+    elif(ele[0][0][1] == 'black' and ele[1][0][1] == 'black'):#
+        print(ele[0][0][1], ele[1][0][1], ele[1][0][0], ele[1][0][1], ele[1][1])
+    elif(ele[0][0][1] == 'black' and ele[1][0][1] == 'blue'):#
+        print(ele[0][0][1], ele[1][0][1], ele[1][0][0], ele[1][0][1], ele[1][1]+Black2Blue)
+    elif(ele[0][0][1] == 'black' and ele[1][0][1] == 'green'):#
+        print(ele[0][0][1], ele[1][0][1], ele[1][0][0], ele[1][0][1], ele[1][1]-Green2Black)
+    elif(ele[0][0][1] == 'blue' and ele[1][0][1] == 'black'):#
+        print(ele[0][0][1], ele[1][0][1], ele[1][0][0], ele[1][0][1], ele[1][1]-Black2Blue)
+    elif(ele[0][0][1] == 'blue' and ele[1][0][1] == 'green'):
+        print(ele[0][0][1], ele[1][0][1], ele[1][0][0], ele[1][0][1], ele[1][1]-(Green2Black+Black2Blue))
+    else:
+        print(ele[0][0][1], ele[1][0][1], ele[1][0][0], ele[1][0][1], ele[1][1])

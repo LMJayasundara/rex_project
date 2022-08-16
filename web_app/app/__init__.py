@@ -322,7 +322,7 @@ def create_app(config_object_name) -> Flask:
                                 elif (index > mid_index and val == None):
                                     for mul, i in enumerate(range(index, len(arr)-1, 1)):
                                         if end//2 + (gap * (mul+1)) < end:
-                                            arr[i] = end//2 - (gap * (mul+1))
+                                            arr[i] = end//2 + (gap * (mul+1))
                                         else:
                                             arr[i] = end
                             return arr

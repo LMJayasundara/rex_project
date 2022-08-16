@@ -777,6 +777,9 @@ ipcMain.handle('startPro', (event, obj) => {
 
         var arr = obj.replace(/[{(',')}]/g, '').split(" ");
 
+        const Green2Black = 1;
+        const Black2Blue = 2;
+
         const n = 3;
         const chunk = (arr, size) => {
           const res = [];
@@ -792,11 +795,11 @@ ipcMain.handle('startPro', (event, obj) => {
         };
 
         var out = chunk(arr, n);
+        // console.log(out);
         global.len = out.length;
 
         for (let i = 0; i < out.length; i++) {
-          console.log(out[i][1]);
-
+          
           if(out[i][1] == 'green'){
 
             master.writeSingleRegister(A(i, 0), const_data[1][0]).then(function (resp) {
@@ -828,13 +831,91 @@ ipcMain.handle('startPro', (event, obj) => {
             });
           }
 
-          
-          master.writeSingleRegister(Dis(i), parseInt(out[i][2])).then(function (resp) {
-            // console.log(resp);
-            console.log(parseInt(out[i][2]));
-          }, function (err) {
-            console.log(out[i][2], " err")
-          });
+          try {
+            console.log(out[i-1][1], out[i][1]);
+
+            if(out[i-1][1] == 'green' && out[i][1] == 'black'){
+              master.writeSingleRegister(Dis(i), parseInt(out[i][2])+Green2Black).then(function (resp) {
+                // console.log(resp);
+                console.log(parseInt(out[i][2])+Green2Black);
+              }, function (err) {
+                console.log(out[i][2], " err")
+              });
+            }
+
+            else if(out[i-1][1] == 'green' && out[i][1] == 'blue'){
+              master.writeSingleRegister(Dis(i), parseInt(out[i][2])+(Green2Black+Black2Blue)).then(function (resp) {
+                // console.log(resp);
+                console.log(parseInt(out[i][2])+(Green2Black+Black2Blue));
+              }, function (err) {
+                console.log(out[i][2], " err")
+              });
+            }
+
+            else if(out[i-1][1] == 'black' && out[i][1] == 'black'){
+              master.writeSingleRegister(Dis(i), parseInt(out[i][2])).then(function (resp) {
+                // console.log(resp);
+                console.log(parseInt(out[i][2]));
+              }, function (err) {
+                console.log(out[i][2], " err")
+              });
+            }
+
+            else if(out[i-1][1] == 'black' && out[i][1] == 'blue'){
+              master.writeSingleRegister(Dis(i), parseInt(out[i][2])+Black2Blue).then(function (resp) {
+                // console.log(resp);
+                console.log(parseInt(out[i][2])+Black2Blue);
+              }, function (err) {
+                console.log(out[i][2], " err")
+              });
+            }
+
+            else if(out[i-1][1] == 'black' && out[i][1] == 'green'){
+              master.writeSingleRegister(Dis(i), parseInt(out[i][2])-Green2Black).then(function (resp) {
+                // console.log(resp);
+                console.log(parseInt(out[i][2])-Green2Black);
+              }, function (err) {
+                console.log(out[i][2], " err")
+              });
+            }
+
+            else if(out[i-1][1] == 'blue' && out[i][1] == 'black'){
+              master.writeSingleRegister(Dis(i), parseInt(out[i][2])-Black2Blue).then(function (resp) {
+                // console.log(resp);
+                console.log(parseInt(out[i][2])-Black2Blue);
+              }, function (err) {
+                console.log(out[i][2], " err")
+              });
+            }
+
+            else if(out[i-1][1] == 'blue' && out[i][1] == 'green'){
+              master.writeSingleRegister(Dis(i), parseInt(out[i][2])-(Green2Black+Black2Blue)).then(function (resp) {
+                // console.log(resp);
+                console.log(parseInt(out[i][2])-(Green2Black+Black2Blue));
+              }, function (err) {
+                console.log(out[i][2], " err")
+              });
+            }
+
+            else{
+              master.writeSingleRegister(Dis(i), parseInt(out[i][2])).then(function (resp) {
+                // console.log(resp);
+                console.log(parseInt(out[i][2]));
+              }, function (err) {
+                console.log(out[i][2], " err")
+              });
+            }
+
+          } catch (error) {
+            console.log('None', out[i][1]);
+
+            master.writeSingleRegister(Dis(i), parseInt(out[i][2])).then(function (resp) {
+              // console.log(resp);
+              console.log(parseInt(out[i][2]));
+            }, function (err) {
+              console.log(out[i][2], " err")
+            });
+          }
         }
 
         // bed distance tresh hold
