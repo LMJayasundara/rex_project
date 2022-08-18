@@ -13,7 +13,7 @@ global.len = null;
 var createFileStructure = function() {
   return new Promise(function(resolve, reject) {
     fsx.ensureDirSync('c:\\config');
-    fsx.writeFileSync('c:\\config\\config.txt', 'COM2,localhost,rootx,ShaN@19960930,rex,150,150,150,1000', 'utf8');
+    fsx.writeFileSync('c:\\config\\config.txt', 'COM2,localhost,rootx,ShaN@19960930,rex,150,150,150,1000,1,2', 'utf8');
     resolve();
   });
 };
@@ -777,8 +777,9 @@ ipcMain.handle('startPro', (event, obj) => {
 
         var arr = obj.replace(/[{(',')}]/g, '').split(" ");
 
-        const Green2Black = 1;
-        const Black2Blue = 2;
+        var r2rDis = fs.readFileSync('C:\\config\\config.txt','utf8').split(",").slice(9, 11).map(Number);
+        const Green2Black = r2rDis[0];
+        const Black2Blue = r2rDis[1];
 
         const n = 3;
         const chunk = (arr, size) => {

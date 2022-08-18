@@ -131,6 +131,8 @@ ipcRenderer.on("reply", (event, data)=>{
         document.getElementsByName('rpm2')[0].value = fileData[6];
         document.getElementsByName('rpm3')[0].value = fileData[7];
         document.getElementsByName('ltresh')[0].value = fileData[8];
+        document.getElementsByName('Green2Black')[0].value = fileData[9];
+        document.getElementsByName('Black2Blue')[0].value = fileData[10];
 
     }
 });
@@ -422,9 +424,11 @@ function updatecnf() {
     var rpm2 = document.getElementById('rpm2').value;
     var rpm3 = document.getElementById('rpm3').value;
     var ltresh = document.getElementById('ltresh').value;
+    var Green2Black = document.getElementById('Green2Black').value;
+    var Black2Blue = document.getElementById('Black2Blue').value;
 
     var data = fs.readFileSync('c:\\config\\config.txt','utf8');
     var curData = fs.readFileSync('c:\\config\\config.txt','utf8').split(",");
-    const res = data.replace([curData[5], curData[6], curData[7], curData[8]], [rpm1, rpm2, rpm3, ltresh])
+    const res = data.replace([curData[5], curData[6], curData[7], curData[8], curData[9], curData[10]], [rpm1, rpm2, rpm3, ltresh, Green2Black, Black2Blue])
     fs.writeFileSync('c:\\config\\config.txt', res, 'utf8');
 }
