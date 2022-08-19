@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>{{ title }} | Electron App</title>
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet" />
+    <script src="{{ url_for('static', filename='js/jquery-3.2.1.slim.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script> -->
+  </head>
+
+  <body>
+    {% block body %} 
+    
+    {% endblock %}
+  </body>
+  <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+  <!-- Optional JavaScript -->
+  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+  <script src="{{ url_for('static', filename='jsx/jquery-3.3.1.slim.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='jsx/bootstrap.min.js') }}"></script>
+</html>
