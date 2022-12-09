@@ -1,0 +1,3 @@
+sql server 2019 express
+passwd - 9 char
+       - 90 days exp
